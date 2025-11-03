@@ -1,0 +1,30 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": { "area_in_meters": 150.5, "confidence": 0.85, "type": "residential", "id": "B-001" },
+      "geometry": { "type": "Polygon", "coordinates": [ [ [11.166, 10.286], [11.167, 10.286], [11.167, 10.285], [11.166, 10.285], [11.166, 10.286] ] ] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "area_in_meters": 800.2, "confidence": 0.92, "type": "commercial", "id": "B-002" },
+      "geometry": { "type": "Polygon", "coordinates": [ [ [11.170, 10.290], [11.171, 10.290], [11.171, 10.289], [11.170, 10.289], [11.170, 10.290] ] ] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "area_in_meters": 1200, "confidence": 0.78, "type": "industrial", "id": "B-003" },
+      "geometry": { "type": "Polygon", "coordinates": [ [ [11.175, 10.295], [11.176, 10.295], [11.176, 10.294], [11.175, 10.294], [11.175, 10.295] ] ] }
+    },
+    {
+      "type": "Feature",
+      "properties": { "area_in_meters": 2500, "confidence": 0.95, "type": "institutional", "id": "B-004" },
+      "geometry": { "type": "Polygon", "coordinates": [ [ [11.180, 10.300], [11.181, 10.300], [11.181, 10.299], [11.180, 10.299], [11.180, 10.300] ] ] }
+    },
+     {
+      "type": "Feature",
+      "properties": { "area_in_meters": 97, "confidence": 0.65, "type": "mixed-use", "id": "B-005" },
+      "geometry": { "type": "Polygon", "coordinates": [ [ [11.185, 10.305], [11.186, 10.305], [11.186, 10.304], [11.185, 10.304], [11.185, 10.305] ] ] }
+    }
+  ]
+}
