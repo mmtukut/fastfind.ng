@@ -31,7 +31,7 @@ const layerStyle: LayerProps = {
       '#6B7280' // other
     ],
     'fill-opacity': 0.7,
-    'fill-outline-color': 'hsl(var(--primary))',
+    'fill-outline-color': '#3B82F6',
   },
 };
 

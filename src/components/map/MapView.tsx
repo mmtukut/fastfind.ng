@@ -15,7 +15,7 @@ export default function MapView() {
 
   useEffect(() => {
     setLoading(true);
-    fetch('/data/buildings/gombe_buildings.geojson')
+    fetch('https://firebasestorage.googleapis.com/v0/b/studio-8745024075-1f679.firebasestorage.app/o/gombe_open_buildings.geojson?alt=media&token=e67162b2-8f10-405c-9770-bb61f4934fa9')
       .then(resp => resp.json())
       .then(json => {
         setData(json);
