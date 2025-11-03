@@ -33,7 +33,7 @@ const classifications = [
   { type: 'Residential', count: 37245, percent: 74.5, color: 'bg-accent-emerald' },
   { type: 'Commercial', count: 8932, percent: 17.9, color: 'bg-accent-amber' },
   { type: 'Industrial', count: 2456, percent: 4.9, color: 'bg-accent-purple' },
-  { type 'Institutional', count: 1267, percent: 2.5, color: 'bg-accent-sky' },
+  { type: 'Institutional', count: 1267, percent: 2.5, color: 'bg-accent-sky' },
   { type: 'Mixed Use', count: 97, percent: 0.2, color: 'bg-gray-500' },
 ];
 
