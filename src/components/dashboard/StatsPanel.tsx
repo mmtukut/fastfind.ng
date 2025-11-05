@@ -136,4 +136,10 @@ export function StatsPanel() {
         <div className="mt-6 pt-6 border-t border-border">
           <div className="flex items-start gap-3 text-xs text-muted-foreground">
             <CheckCircle2 className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
-            <p className="leading-relaxed">Data powered by <span className="font-semibold text-foreground/80">Google Open Buildings</span> and <span className="font-semibold text-foreground/80">FastFind360 AI</span> classification
+            <p className="leading-relaxed">Data powered by <span className="font-semibold text-foreground/80">Google Open Buildings</span> and <span className="font-semibold text-foreground/80">FastFind360 AI</span> classification</p>
+          </div>
+        </div>
+      </div>
+    </aside>
+  );
+}
