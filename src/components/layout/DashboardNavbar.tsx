@@ -113,4 +113,10 @@ export function DashboardNavbar() {
               <input type="text" placeholder="Search..." className="w-full pl-9 pr-3 py-2 bg-background rounded-lg"/>
             </div>
             <Button onClick={toggleAdminView} variant="outline" className="w-full justify-center">Switch to {isAdminView ? 'Public' : 'Admin'} View</Button>
-            <Button variant="outline" className="w-full justify-center" onClick={handleExport}><Download className="w-4 h-4 mr-2" /> Export Data</Button
+            <Button variant="outline" className="w-full justify-center" onClick={handleExport}><Download className="w-4 h-4 mr-2" /> Export Data</Button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </header>
+  );
+}
