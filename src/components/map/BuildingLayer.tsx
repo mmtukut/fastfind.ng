@@ -2,21 +2,6 @@
 
 import { Layer, Source, LayerProps } from 'react-map-gl';
 
-const buildingColor = (type: string) => {
-  switch (type) {
-    case 'residential':
-      return '#10B981'; // accent-emerald
-    case 'commercial':
-      return '#F59E0B'; // accent-amber
-    case 'industrial':
-      return '#8B5CF6'; // accent-purple
-    case 'institutional':
-      return '#0EA5E9'; // accent-sky
-    default:
-      return '#6B7280'; // gray-500
-  }
-};
-
 const layerStyle: LayerProps = {
   id: 'buildings',
   type: 'fill',
@@ -24,14 +9,22 @@ const layerStyle: LayerProps = {
     'fill-color': [
       'match',
       ['get', 'type'],
+      'residential', '#10B981', // emerald
+      'commercial', '#F59E0B', // amber
+      'industrial', '#A855F7', // purple
+      'institutional', '#0EA5E9', // sky
+      '#6B7280' // gray for mixed-use and others
+    ],
+    'fill-opacity': 0.6,
+    'fill-outline-color': [
+      'match',
+      ['get', 'type'],
       'residential', '#10B981',
       'commercial', '#F59E0B',
-      'industrial', '#8B5CF6',
+      'industrial', '#A855F7',
       'institutional', '#0EA5E9',
-      '#6B7280' // other
+      '#6B7280'
     ],
-    'fill-opacity': 0.7,
-    'fill-outline-color': '#3B82F6',
   },
 };
 
@@ -40,8 +33,8 @@ const layerOutlineStyle: LayerProps = {
     type: 'line',
     paint: {
         'line-color': '#FFFFFF',
-        'line-width': 1.5,
-        'line-opacity': 0.5
+        'line-width': 1,
+        'line-opacity': 0.3
     }
 };
 
