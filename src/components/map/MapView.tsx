@@ -1,13 +1,14 @@
 'use client';
 
 import Map, { Source, Layer, Popup, ViewState, MapLayerMouseEvent } from 'react-map-gl';
-import { useEffect, useState, useMemo, useCallback } from 'react';
-import { Building } from '@/types';
+import 'mapbox-gl/dist/mapbox-gl.css';
+import { useEffect, useState, useMemo } from 'react';
+import type { Building } from '@/types';
 import { BuildingPopup } from './BuildingPopup';
 import { Skeleton } from '../ui/skeleton';
 import { useStore } from '@/store/buildingStore';
 
-const MAPBOX_TOKEN = 'pk.eyJ1IjoiZmVzdHVzLWZmLTM2MCIsImEiOiJjbHh0ZWticWgwYW1iMmtscWE1cXc4M2tsIn0.8o_dGStnchA-5nB_mbNo3w'; // Replace with your Mapbox token
+const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
 
 export default function MapView() {
   const { activeFilters, setFilteredBuildings } = useStore();
@@ -50,11 +51,16 @@ export default function MapView() {
       return typeMatch && sizeMatch && confidenceMatch;
     });
 
-    // Update the store with the currently filtered buildings
-    setFilteredBuildings(features as Building[]);
-
     return { type: 'FeatureCollection', features } as GeoJSON.FeatureCollection;
-  }, [data, activeFilters, setFilteredBuildings]);
+  }, [data, activeFilters]);
+
+  // The state update must be in a useEffect, not in useMemo.
+  useEffect(() => {
+    if (filteredData) {
+      setFilteredBuildings(filteredData.features as Building[]);
+    }
+  }, [filteredData, setFilteredBuildings]);
+
 
   const handleMapClick = (event: MapLayerMouseEvent) => {
     if (event.features && event.features.length > 0) {
@@ -100,7 +106,7 @@ export default function MapView() {
       'fill-color': '#FBBF24',
       'fill-opacity': 0.8,
     },
-    filter: ['==', ['id'], hoverInfo?.feature.id || '']
+    filter: ['==', 'full_plus_code', hoverInfo?.feature.properties.full_plus_code || '']
   };
   
   return (
