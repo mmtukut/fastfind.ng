@@ -9,11 +9,9 @@ import { useStore } from '@/store/buildingStore';
 import { useDebounce } from '@/hooks/use-debounce';
 import { Button } from '../ui/button';
 import { Map as MapIcon, Satellite } from 'lucide-react';
-import { LngLatBounds } from 'mapbox-gl';
-import getConfig from 'next/config';
+import type { LngLatBounds } from 'mapbox-gl';
 
-const { publicRuntimeConfig } = getConfig();
-const MAPBOX_ACCESS_TOKEN = publicRuntimeConfig.mapboxAccessToken;
+const MAPBOX_ACCESS_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
 
 export default function MapView() {
   const { activeFilters, setFilteredBuildings } = useStore();
