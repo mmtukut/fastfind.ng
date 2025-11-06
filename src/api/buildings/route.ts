@@ -2,8 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const buildingTypes = ['residential', 'commercial', 'industrial', 'institutional'];
 
-function getRandomBuildingType() {
-  return buildingTypes[Math.floor(Math.random() * buildingTypes.length)];
+function getRandomBuildingType(seed: number) {
+  // Simple pseudo-random generator based on a seed for consistency
+  const x = Math.sin(seed) * 10000;
+  const index = Math.floor((x - Math.floor(x)) * buildingTypes.length);
+  return buildingTypes[index];
 }
 
 async function parseCSV(csv: string, bounds: { north: number, south: number, east: number, west: number } | null) {
@@ -44,8 +47,8 @@ async function parseCSV(csv: string, bounds: { north: number, south: number, eas
         }
       });
       
-      // Assign a random type for filtering, since it's not in the CSV
-      properties['type'] = getRandomBuildingType();
+      // Assign a consistent "random" type based on coordinates for filtering
+      properties['type'] = getRandomBuildingType(latitude + longitude);
       
       features.push({
         type: 'Feature',

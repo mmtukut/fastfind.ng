@@ -14,7 +14,7 @@ const MAP_ID = 'b8e9b5d759556b26';
 
 export default function MapView() {
   const { activeFilters, setFilteredBuildings } = useStore();
-  const [data, setData] = useState<GeoJSON.FeatureCollection>();
+  const [data, setData] = useState<GeoJSON.FeatureCollection | undefined>();
   const [loading, setLoading] = useState(true);
   const [selectedBuilding, setSelectedBuilding] = useState<Building | null>(null);
   const [bounds, setBounds] = useState<google.maps.LatLngBounds | null>(null);
@@ -34,10 +34,14 @@ export default function MapView() {
 
     try {
       const resp = await fetch(url);
+      if (!resp.ok) {
+        throw new Error('Failed to fetch data');
+      }
       const json = await resp.json();
       setData(json);
     } catch (err) {
       console.error("Could not load building data", err);
+      // Optionally, set an error state to show in the UI
     } finally {
       setLoading(false);
     }
@@ -49,12 +53,12 @@ export default function MapView() {
     }
   }, [debouncedBounds, fetchData]);
 
-  const handleCameraChange = (ev: { detail: { bounds: google.maps.LatLngBounds; }; }) => {
+  const handleCameraChange = useCallback((ev: { detail: { bounds: google.maps.LatLngBounds; }; }) => {
     setBounds(ev.detail.bounds);
-  };
+  }, []);
 
   const filteredData = useMemo(() => {
-    if (!data) return [];
+    if (!data?.features) return [];
     
     const features = data.features.filter(feature => {
       const { properties } = feature;
@@ -67,8 +71,9 @@ export default function MapView() {
       return typeMatch && sizeMatch && confidenceMatch;
     });
 
-    setFilteredBuildings(features as Building[]);
-    return features as Building[];
+    const buildings = features as Building[];
+    setFilteredBuildings(buildings);
+    return buildings;
   }, [data, activeFilters, setFilteredBuildings]);
 
 
@@ -84,7 +89,7 @@ export default function MapView() {
   };
 
   return (
-    <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+    <div className="w-full h-full relative">
         {loading && <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 bg-white/80 backdrop-blur-sm p-2 px-4 rounded-full text-sm font-medium shadow-md animate-pulse">Loading data...</div>}
         
         <div className="absolute top-4 right-4 z-10 flex flex-col gap-2">
@@ -114,7 +119,7 @@ export default function MapView() {
             disableDefaultUI={true}
             onCameraChanged={handleCameraChange}
             gestureHandling="greedy"
-            style={{width: '100%', height: '100%'}}
+            className="w-full h-full"
         >
             {filteredData.map((building) => {
                 if (!building.geometry) return null;
