@@ -19,14 +19,14 @@ import Link from 'next/link';
 import { Button } from '../ui/button';
 
 const metrics = [
-  { label: 'Total Buildings', value: '49,997', icon: Building2, trend: '+2.4%', color: 'blue' },
+  { label: 'Total Buildings', value: '49,997', icon: Building2, trend: '+2.4%', color: 'green' },
   { label: 'Total Area', value: '3.7 km²', icon: MapPin, trend: '+1.8%', color: 'emerald' },
   { label: 'Detection Rate', value: '0.8%', icon: CheckCircle2, trend: 'High', color: 'sky' },
   { label: 'Revenue Potential', value: '₦2.6B', icon: DollarSign, trend: '+5.2%', color: 'amber' },
 ];
 
 const metricStyles: { [key: string]: { bg: string; text: string; } } = {
-  blue: { bg: 'bg-primary/10', text: 'text-primary' },
+  green: { bg: 'bg-primary/10', text: 'text-primary' },
   emerald: { bg: 'bg-emerald-500/10', text: 'text-emerald-500' },
   sky: { bg: 'bg-sky-500/10', text: 'text-sky-500' },
   amber: { bg: 'bg-amber-500/10', text: 'text-amber-500' },
@@ -111,15 +111,15 @@ export function StatsPanel() {
           </CardContent>
         </Card>
 
-        <div className="bg-gradient-to-br from-primary to-blue-600 rounded-xl p-5 text-white shadow-lg shadow-blue-500/20">
+        <div className="bg-gradient-to-br from-green-600 to-emerald-700 rounded-xl p-5 text-white shadow-lg shadow-green-500/20">
           <div className="flex items-center gap-2 mb-3"><DollarSign className="w-5 h-5" /><h3 className="text-sm font-bold">Revenue Impact</h3></div>
           <p className="text-4xl font-bold mb-2">₦2.6B</p>
-          <p className="text-sm text-blue-100 mb-4">Estimated Annual Potential</p>
-          <Separator className="bg-blue-300/30 my-3" />
+          <p className="text-sm text-green-100 mb-4">Estimated Annual Potential</p>
+          <Separator className="bg-green-300/30 my-3" />
           <div className="space-y-2">
-            <div className="flex justify-between text-sm"><span className="text-blue-100">Registered Properties</span><span className="font-semibold">32%</span></div>
-            <div className="flex justify-between text-sm"><span className="text-blue-100">Current Collection Rate</span><span className="font-semibold">45%</span></div>
-            <div className="flex justify-between text-sm"><span className="text-blue-100">Potential Increase</span><span className="font-semibold text-emerald-300">+185%</span></div>
+            <div className="flex justify-between text-sm"><span className="text-green-100">Registered Properties</span><span className="font-semibold">32%</span></div>
+            <div className="flex justify-between text-sm"><span className="text-green-100">Current Collection Rate</span><span className="font-semibold">45%</span></div>
+            <div className="flex justify-between text-sm"><span className="text-green-100">Potential Increase</span><span className="font-semibold text-emerald-300">+185%</span></div>
           </div>
         </div>
         

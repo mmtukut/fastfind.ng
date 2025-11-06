@@ -32,7 +32,8 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
-      <body className={cn('min-h-screen bg-background font-body antialiased', inter.variable, spaceGrotesk.variable)}>
+      {/* The default theme is dark, but pages can override it by adding 'light' to the html tag */}
+      <body className={cn(inter.variable, spaceGrotesk.variable)}>
         {children}
         <Toaster />
       </body>

@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 async function getBuildingData(filters: any) {
-  // In a real scenario, you'd fetch and filter this data.
   const response = await fetch(process.env.NODE_ENV === 'production' 
-    ? 'https://firebasestorage.googleapis.com/v0/b/studio-8745024075-1f679.firebasestorage.app/o/gombe_open_buildings.geojson?alt=media&token=e67162b2-8f10-405c-9770-bb61f4934fa9'
+    ? 'http://localhost:9002/api/buildings' // Use the internal API route
     : 'http://localhost:9002/api/buildings'
   );
   const geojsonData = await response.json();
@@ -24,6 +23,7 @@ async function getBuildingData(filters: any) {
   }
 
   if (filters.confidence) {
+    // The confidence filter is 0-100, but the property confidence is 0-1
     const minConfidence = parseFloat(filters.confidence) / 100;
     features = features.filter((feature: any) => feature.properties.confidence >= minConfidence);
   }
@@ -39,8 +39,12 @@ function convertToCSV(data: any[]) {
   const csvRows = [
     headers.join(','),
     ...data.map(row => 
-      headers.map(header => JSON.stringify(row[header], (key, value) => value === null ? '' : value))
-      .join(',')
+      headers.map(header => {
+        const value = row[header];
+        // Handle values that contain commas by wrapping them in quotes
+        const stringValue = String(value === null || value === undefined ? '' : value);
+        return stringValue.includes(',') ? `"${stringValue}"` : stringValue;
+      }).join(',')
     )
   ];
   return csvRows.join('\n');

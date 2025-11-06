@@ -3,11 +3,12 @@ export interface BuildingProperties {
     confidence: number;
     type: 'residential' | 'commercial' | 'industrial' | 'institutional' | 'mixed-use';
     id: string;
+    // Allow other properties from CSV
+    [key: string]: any;
 }
 
 export interface Building {
     id: string | number;
     properties: BuildingProperties;
-    geometry: GeoJSON.Polygon;
-    lngLat: [number, number];
+    geometry: GeoJSON.Point | GeoJSON.Polygon;
 }

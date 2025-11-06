@@ -10,19 +10,19 @@
     --card-foreground: 220 13% 20%;
     --popover: 210 20% 100%;
     --popover-foreground: 220 13% 20%;
-    --primary: 224 82% 51%; /* Government Blue */
-    --primary-foreground: 210 20% 98%;
+    --primary: 151 83% 46%; /* Digital Green */
+    --primary-foreground: 144 15% 5%;
     --secondary: 210 20% 96%;
     --secondary-foreground: 220 9% 41%;
     --muted: 210 20% 96%;
     --muted-foreground: 215 14% 53%;
-    --accent: 142 76% 36%; /* Emerald Green */
-    --accent-foreground: 210 20% 98%;
+    --accent: 151 83% 46%; /* Digital Green */
+    --accent-foreground: 144 15% 5%;
     --destructive: 0 72% 51%;
     --destructive-foreground: 210 20% 98%;
     --border: 216 12% 84%;
     --input: 216 12% 84%;
-    --ring: 224 82% 51%;
+    --ring: 151 83% 46%;
 
     --radius: 1rem; /* 16px */
 
@@ -40,25 +40,25 @@
   }
 
   .dark {
-    --background: 222 84% 5%; /* near-black with deep blue */
-    --foreground: 210 40% 98%; /* almost pure white */
-    --card: 222 84% 9%; /* dark, subtle gray-blue */
-    --card-foreground: 210 40% 98%;
-    --popover: 222 84% 9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 217 91% 60%; /* vibrant, glowing blue */
-    --primary-foreground: 222 84% 5%;
-    --secondary: 222 84% 12%; /* dark, subtle gray-blue for secondary info */
-    --secondary-foreground: 210 40% 98%;
-    --muted: 222 84% 15%;
+    --background: 144 15% 5%; /* near-black with deep green */
+    --foreground: 0 0% 98%; /* almost pure white */
+    --card: 144 10% 9%; /* dark, subtle gray-green */
+    --card-foreground: 0 0% 98%;
+    --popover: 144 10% 9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 151 83% 46%; /* vibrant, glowing green */
+    --primary-foreground: 144 15% 5%;
+    --secondary: 144 10% 12%; /* dark, subtle gray-green for secondary info */
+    --secondary-foreground: 0 0% 98%;
+    --muted: 144 10% 15%;
     --muted-foreground: 215 20% 65%; /* Lighter gray for muted text */
-    --accent: 142 71% 45%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 151 83% 46%;
+    --accent-foreground: 144 15% 5%;
     --destructive: 0 63% 31%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 222 84% 15%;
-    --input: 222 84% 15%;
-    --ring: 217 91% 60%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 144 10% 15%;
+    --input: 144 10% 15%;
+    --ring: 151 83% 46%;
   }
 }
 
@@ -66,8 +66,15 @@
   * {
     @apply border-border;
   }
-  body {
+  html.light, .light body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
+  }
+  html.dark, .dark body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+  body {
+    @apply min-h-screen bg-background font-body antialiased;
   }
 }

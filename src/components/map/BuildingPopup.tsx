@@ -16,19 +16,22 @@ const typeColors: { [key: string]: string } = {
 
 
 export function BuildingPopup({ building, onClose }: {building: Building, onClose: () => void}) {
-  const { properties } = building;
+  const { properties, geometry } = building;
   
-  if (!properties) {
+  if (!properties || !geometry) {
     return null;
   }
+
+  // Use the coordinates from the Point geometry
+  const coords = (geometry as GeoJSON.Point).coordinates;
 
   const confidenceLevel = properties.confidence * 100 >= 90 ? 'High' : properties.confidence * 100 >= 75 ? 'Medium' : 'Low';
   const confidenceColor = properties.confidence * 100 >= 90 ? 'text-emerald-600' : properties.confidence * 100 >= 75 ? 'text-amber-600' : 'text-red-600';
 
   return (
     <Popup
-      longitude={building.lngLat[0]}
-      latitude={building.lngLat[1]}
+      longitude={coords[0]}
+      latitude={coords[1]}
       onClose={onClose}
       closeButton={true}
       closeOnClick={false}

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Map, List, Download, Search, Menu, X, UserShield, Sun } from 'lucide-react';
+import { Map, List, Download, Search, Menu, X, ShieldCheck, Sun } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useStore } from '@/store/buildingStore';
 import { Badge } from '../ui/badge';
@@ -78,7 +78,7 @@ export function DashboardNavbar() {
               }`}
               variant={isAdminView ? "destructive" : "outline"}
             >
-              {isAdminView ? <UserShield className="w-4 h-4 mr-2" /> : <Sun className="w-4 h-4 mr-2" />}
+              {isAdminView ? <ShieldCheck className="w-4 h-4 mr-2" /> : <Sun className="w-4 h-4 mr-2" />}
               {isAdminView ? 'Admin View' : 'Public View'}
             </Button>
             

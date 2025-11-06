@@ -18,7 +18,7 @@ export default {
     extend: {
       fontFamily: {
         body: ['var(--font-inter)', 'sans-serif'],
-        headline: ['var(--font-inter)', 'sans-serif'],
+        headline: ['var(--font-space-grotesk)', 'sans-serif'],
       },
       colors: {
         border: 'hsl(var(--border))',
@@ -29,16 +29,6 @@ export default {
         primary: {
           DEFAULT: 'hsl(var(--primary))',
           foreground: 'hsl(var(--primary-foreground))',
-          '50': '#EFF6FF',
-          '100': '#DBEAFE',
-          '200': '#BFDBFE',
-          '300': '#93C5FD',
-          '400': '#60A5FA',
-          '500': '#3B82F6',
-          '600': '#2563EB',
-          '700': '#1D4ED8',
-          '800': '#1E40AF',
-          '900': '#1E3A8A',
         },
         secondary: {
           DEFAULT: 'hsl(var(--secondary))',

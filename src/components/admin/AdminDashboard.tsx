@@ -11,6 +11,7 @@ import {
   ArrowUpRight,
   MapPin,
   Flag,
+  ShieldCheck,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useStore } from '@/store/buildingStore';
@@ -213,19 +214,19 @@ export function AdminDashboard() {
               </CardContent>
             </Card>
             
-            <div className="bg-gradient-to-br from-primary to-blue-600 rounded-xl p-6 text-white shadow-lg">
+            <div className="bg-gradient-to-br from-green-600 to-emerald-700 rounded-xl p-6 text-white shadow-lg">
               <div className="flex items-center gap-2 mb-4">
                 <TrendingUp className="w-6 h-6" />
                 <h3 className="text-lg font-bold">Revenue Recovery</h3>
               </div>
-              <p className="text-sm text-blue-100 mb-2">Projected Annual Impact</p>
+              <p className="text-sm text-green-100 mb-2">Projected Annual Impact</p>
               <p className="text-5xl font-bold">₦2.6B</p>
-              <Separator className="my-4 bg-blue-400" />
+              <Separator className="my-4 bg-green-400" />
               <div className="space-y-3">
-                <div className="flex justify-between text-sm"><span className="text-blue-100">Registered Rate</span><span className="font-bold">32%</span></div>
-                <div className="flex justify-between text-sm"><span className="text-blue-100">Collection Rate</span><span className="font-bold">45%</span></div>
+                <div className="flex justify-between text-sm"><span className="text-green-100">Registered Rate</span><span className="font-bold">32%</span></div>
+                <div className="flex justify-between text-sm"><span className="text-green-100">Collection Rate</span><span className="font-bold">45%</span></div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-blue-100">Potential Increase</span>
+                  <span className="text-green-100">Potential Increase</span>
                   <div className="flex items-center gap-1"><ArrowUpRight className="w-4 h-4" /><span className="font-bold">+185%</span></div>
                 </div>
               </div>

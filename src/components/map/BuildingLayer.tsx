@@ -4,9 +4,17 @@ import { Layer, Source, LayerProps } from 'react-map-gl';
 
 const layerStyle: LayerProps = {
   id: 'buildings',
-  type: 'fill',
+  type: 'circle',
   paint: {
-    'fill-color': [
+    'circle-radius': [
+      'interpolate',
+      ['linear'],
+      ['zoom'],
+      12, 2, // at zoom 12, radius is 2px
+      16, 8, // at zoom 16, radius is 8px
+      20, 20  // at zoom 20, radius is 20px
+    ],
+    'circle-color': [
       'match',
       ['get', 'type'],
       'residential', '#10B981', // emerald
@@ -15,27 +23,11 @@ const layerStyle: LayerProps = {
       'institutional', '#0EA5E9', // sky
       '#6B7280' // gray for mixed-use and others
     ],
-    'fill-opacity': 0.6,
-    'fill-outline-color': [
-      'match',
-      ['get', 'type'],
-      'residential', '#10B981',
-      'commercial', '#F59E0B',
-      'industrial', '#A855F7',
-      'institutional', '#0EA5E9',
-      '#6B7280'
-    ],
+    'circle-opacity': 0.7,
+    'circle-stroke-width': 1,
+    'circle-stroke-color': '#ffffff',
+    'circle-stroke-opacity': 0.5,
   },
-};
-
-const layerOutlineStyle: LayerProps = {
-    id: 'buildings-outline',
-    type: 'line',
-    paint: {
-        'line-color': '#FFFFFF',
-        'line-width': 1,
-        'line-opacity': 0.3
-    }
 };
 
 interface BuildingLayerProps {
@@ -48,7 +40,6 @@ export function BuildingLayer({ data }: BuildingLayerProps) {
   return (
     <Source id="my-data" type="geojson" data={data}>
       <Layer {...layerStyle} />
-      <Layer {...layerOutlineStyle} />
     </Source>
   );
 }
