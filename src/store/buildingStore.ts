@@ -1,3 +1,4 @@
+import { Building } from '@/types';
 import { create } from 'zustand';
 
 const allBuildingTypes = [
@@ -26,16 +27,16 @@ interface BuildingState {
   resetFilters: () => void;
   applyFilters: () => void;
 
-  // Filtered data (this would be set by some data fetching logic)
-  filteredBuildings: any[]; // Replace 'any' with your Building type
-  setFilteredBuildings: (buildings: any[]) => void;
+  // Filtered data (this is the data currently visible on the map)
+  filteredBuildings: Building[]; 
+  setFilteredBuildings: (buildings: Building[]) => void;
 
   // Active filters that are applied to the map
   activeFilters: BuildingState['filters'];
 }
 
 const initialFilterState = {
-  selectedTypes: allBuildingTypes,
+  selectedTypes: [],
   sizeRange: [0, 2000] as [number, number],
   confidence: 70,
 };
@@ -54,7 +55,10 @@ export const useStore = create<BuildingState>((set) => ({
   setSizeRange: (range) => set((state) => ({ filters: { ...state.filters, sizeRange: range } })),
   setConfidence: (confidence) => set((state) => ({ filters: { ...state.filters, confidence: confidence } })),
   
-  resetFilters: () => set({ filters: initialFilterState, activeFilters: initialFilterState }),
+  resetFilters: () => set((state) => ({
+    filters: initialFilterState,
+    activeFilters: initialFilterState
+  })),
 
   applyFilters: () => set(state => ({ activeFilters: state.filters })),
   

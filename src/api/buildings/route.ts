@@ -1,47 +1,61 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
-function parseCSV(csv: string) {
+const buildingTypes = ['residential', 'commercial', 'industrial', 'institutional'];
+
+function getRandomBuildingType() {
+  return buildingTypes[Math.floor(Math.random() * buildingTypes.length)];
+}
+
+async function parseCSV(csv: string, bounds: { north: number, south: number, east: number, west: number } | null) {
   const lines = csv.trim().split('\n');
   const headers = lines[0].split(',').map(h => h.trim());
   const features = [];
+
+  const latIndex = headers.indexOf('latitude');
+  const lonIndex = headers.indexOf('longitude');
+  const areaIndex = headers.indexOf('area_in_meters');
+  const confIndex = headers.indexOf('confidence');
+
+  if (latIndex === -1 || lonIndex === -1) {
+    throw new Error('CSV must contain latitude and longitude columns');
+  }
 
   for (let i = 1; i < lines.length; i++) {
     const data = lines[i].split(',').map(d => d.trim());
     if (data.length !== headers.length) continue;
 
-    const properties: { [key: string]: any } = {};
-    let longitude: number | null = null;
-    let latitude: number | null = null;
+    const latitude = parseFloat(data[latIndex]);
+    const longitude = parseFloat(data[lonIndex]);
 
-    headers.forEach((header, index) => {
-      const value = data[index];
-      if (header === 'longitude') {
-        longitude = parseFloat(value);
-      } else if (header === 'latitude') {
-        latitude = parseFloat(value);
-      } else if (header === 'confidence') {
-        // The confidence from the CSV is 0-100, the app expects 0-1
-        properties[header] = parseFloat(value) / 100;
-      } else if (header === 'area_in_meters') {
-        properties[header] = parseFloat(value);
-      } else if (header === 'classification') {
-        // The CSV uses 'classification', the app uses 'type'
-        properties['type'] = value.toLowerCase() || 'mixed-use';
-        properties[header] = value;
-      } else {
-        properties[header] = value;
-      }
-    });
-
-    if (longitude !== null && latitude !== null && !isNaN(longitude) && !isNaN(latitude)) {
+    if (bounds) {
+        if (latitude > bounds.north || latitude < bounds.south || longitude > bounds.east || longitude < bounds.west) {
+            continue;
+        }
+    }
+    
+    if (!isNaN(longitude) && !isNaN(latitude)) {
+      const properties: { [key: string]: any } = {};
+      headers.forEach((header, index) => {
+        const value = data[index];
+        if (header === 'area_in_meters' || header === 'confidence') {
+          properties[header] = parseFloat(value);
+        } else {
+          properties[header] = value;
+        }
+      });
+      
+      // Assign a random type for filtering, since it's not in the CSV
+      properties['type'] = getRandomBuildingType();
+      
       features.push({
         type: 'Feature',
+        id: `building-${i}`,
         geometry: {
           type: 'Point',
           coordinates: [longitude, latitude]
         },
         properties: {
-          id: properties.id || `building-${i}`,
+          id: `building-${i}`,
           ...properties
         }
       });
@@ -50,9 +64,23 @@ function parseCSV(csv: string) {
   return features;
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    const response = await fetch('https://github.com/mmtukut/Fastfind-360/raw/refs/heads/main/public/data/buildings/gombe_buildings.csv', { 
+    const { searchParams } = new URL(req.url);
+    const north = searchParams.get('north');
+    const south = searchParams.get('south');
+    const east = searchParams.get('east');
+    const west = searchParams.get('west');
+
+    const bounds = north && south && east && west 
+        ? {
+            north: parseFloat(north),
+            south: parseFloat(south),
+            east: parseFloat(east),
+            west: parseFloat(west),
+        } : null;
+
+    const response = await fetch('https://firebasestorage.googleapis.com/v0/b/studio-8745024075-1f679.firebasestorage.app/o/gombe_buildings.csv?alt=media&token=b0db8a15-91a7-48db-952e-57b5b6bfe347', { 
       cache: 'no-store' 
     });
     
@@ -61,7 +89,7 @@ export async function GET() {
     }
     
     const csvData = await response.text();
-    const features = parseCSV(csvData);
+    const features = await parseCSV(csvData, bounds);
 
     const geojsonData = {
       type: 'FeatureCollection',

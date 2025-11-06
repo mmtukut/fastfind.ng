@@ -17,13 +17,8 @@ import { Progress } from '../ui/progress';
 import { useStore } from '@/store/buildingStore';
 import Link from 'next/link';
 import { Button } from '../ui/button';
-
-const metrics = [
-  { label: 'Total Buildings', value: '49,997', icon: Building2, trend: '+2.4%', color: 'green' },
-  { label: 'Total Area', value: '3.7 km²', icon: MapPin, trend: '+1.8%', color: 'emerald' },
-  { label: 'Detection Rate', value: '0.8%', icon: CheckCircle2, trend: 'High', color: 'sky' },
-  { label: 'Revenue Potential', value: '₦2.6B', icon: DollarSign, trend: '+5.2%', color: 'amber' },
-];
+import { useEffect, useState } from 'react';
+import { formatCurrency } from '@/lib/utils';
 
 const metricStyles: { [key: string]: { bg: string; text: string; } } = {
   green: { bg: 'bg-primary/10', text: 'text-primary' },
@@ -33,15 +28,64 @@ const metricStyles: { [key: string]: { bg: string; text: string; } } = {
 };
 
 const classifications = [
-  { type: 'Residential', count: 37245, percent: 74.5, color: 'bg-emerald-500' },
-  { type: 'Commercial', count: 8932, percent: 17.9, color: 'bg-amber-500' },
-  { type: 'Industrial', count: 2456, percent: 4.9, color: 'bg-purple-500' },
-  { type: 'Institutional', count: 1267, percent: 2.5, color: 'bg-sky-500' },
-  { type: 'Mixed Use', count: 97, percent: 0.2, color: 'bg-gray-500' },
+  { type: 'residential', label: 'Residential', color: 'bg-emerald-500' },
+  { type: 'commercial', label: 'Commercial', color: 'bg-amber-500' },
+  { type: 'industrial', label: 'Industrial', color: 'bg-purple-500' },
+  { type: 'institutional', label: 'Institutional', color: 'bg-sky-500' },
 ];
 
 export function StatsPanel() {
-  const { activeFilters } = useStore();
+  const { activeFilters, filteredBuildings } = useStore();
+  const [stats, setStats] = useState({
+    totalBuildings: 0,
+    totalArea: 0,
+    averageConfidence: 0,
+    revenuePotential: 0,
+    classificationCounts: {
+      residential: 0,
+      commercial: 0,
+      industrial: 0,
+      institutional: 0,
+    }
+  });
+
+  useEffect(() => {
+    if (filteredBuildings.length > 0) {
+      const totalArea = filteredBuildings.reduce((sum, b) => sum + (b.properties.area_in_meters || 0), 0);
+      const totalConfidence = filteredBuildings.reduce((sum, b) => sum + (b.properties.confidence || 0), 0);
+      const revenuePotential = totalArea * 1850; // Example calculation
+      
+      const classificationCounts = filteredBuildings.reduce((counts, b) => {
+        const type = b.properties.type;
+        if (type in counts) {
+          counts[type]++;
+        }
+        return counts;
+      }, { residential: 0, commercial: 0, industrial: 0, institutional: 0 });
+
+      setStats({
+        totalBuildings: filteredBuildings.length,
+        totalArea,
+        averageConfidence: totalConfidence / filteredBuildings.length,
+        revenuePotential,
+        classificationCounts,
+      });
+    } else {
+       setStats({
+        totalBuildings: 0,
+        totalArea: 0,
+        averageConfidence: 0,
+        revenuePotential: 0,
+        classificationCounts: {
+          residential: 0,
+          commercial: 0,
+          industrial: 0,
+          institutional: 0,
+        }
+      });
+    }
+  }, [filteredBuildings]);
+
 
   const handleExport = () => {
     const params = new URLSearchParams();
@@ -51,6 +95,13 @@ export function StatsPanel() {
     params.append('confidence', String(activeFilters.confidence));
     window.open(`/api/export?${params.toString()}`, '_blank');
   };
+
+  const metrics = [
+    { label: 'Total Buildings', value: stats.totalBuildings.toLocaleString(), icon: Building2, trend: '', color: 'green' },
+    { label: 'Total Area', value: `${(stats.totalArea / 1e6).toFixed(2)} km²`, icon: MapPin, trend: '', color: 'emerald' },
+    { label: 'Avg. Confidence', value: `${(stats.averageConfidence * 100).toFixed(1)}%`, icon: CheckCircle2, trend: 'High', color: 'sky' },
+    { label: 'Revenue Potential', value: formatCurrency(stats.revenuePotential), icon: DollarSign, trend: '', color: 'amber' },
+  ];
 
   return (
     <aside className="w-80 bg-white border-l border-gray-200 flex flex-col shrink-0">
@@ -79,7 +130,7 @@ export function StatsPanel() {
                   <div className={`w-10 h-10 rounded-lg ${styles.bg} flex items-center justify-center`}>
                     <Icon className={`w-5 h-5 ${styles.text}`} />
                   </div>
-                  <span className="text-xs font-semibold text-emerald-600 bg-emerald-500/10 px-2 py-1 rounded-full">{metric.trend}</span>
+                  {metric.trend && <span className="text-xs font-semibold text-emerald-600 bg-emerald-500/10 px-2 py-1 rounded-full">{metric.trend}</span>}
                 </div>
                 <p className="text-2xl font-bold text-gray-900 mb-1">{metric.value}</p>
                 <p className="text-xs text-gray-500 leading-tight">{metric.label}</p>
@@ -96,29 +147,32 @@ export function StatsPanel() {
                 </div>
             </CardHeader>
           <CardContent className="space-y-4">
-            {classifications.map((cat, index) => (
+            {classifications.map((cat, index) => {
+              const count = stats.classificationCounts[cat.type as keyof typeof stats.classificationCounts] || 0;
+              const percent = stats.totalBuildings > 0 ? (count / stats.totalBuildings) * 100 : 0;
+              return (
               <motion.div key={cat.type} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: index * 0.05 }}>
                 <div className="flex justify-between items-center text-sm mb-2">
-                  <span className="font-medium text-gray-700">{cat.type}</span>
+                  <span className="font-medium text-gray-700">{cat.label}</span>
                   <div className="flex items-center gap-2">
-                    <span className="text-gray-500">{cat.count.toLocaleString()}</span>
-                    <span className="text-xs font-semibold text-gray-400">{cat.percent}%</span>
+                    <span className="text-gray-500">{count.toLocaleString()}</span>
+                    <span className="text-xs font-semibold text-gray-400">{percent.toFixed(1)}%</span>
                   </div>
                 </div>
-                <Progress value={cat.percent} indicatorClassName={cat.color} className="h-2" />
+                <Progress value={percent} indicatorClassName={cat.color} className="h-2" />
               </motion.div>
-            ))}
+            )})}
           </CardContent>
         </Card>
 
         <div className="bg-gradient-to-br from-green-600 to-emerald-700 rounded-xl p-5 text-white shadow-lg shadow-green-500/20">
           <div className="flex items-center gap-2 mb-3"><DollarSign className="w-5 h-5" /><h3 className="text-sm font-bold">Revenue Impact</h3></div>
-          <p className="text-4xl font-bold mb-2">₦2.6B</p>
+          <p className="text-4xl font-bold mb-2">{formatCurrency(stats.revenuePotential)}</p>
           <p className="text-sm text-green-100 mb-4">Estimated Annual Potential</p>
           <Separator className="bg-green-300/30 my-3" />
           <div className="space-y-2">
-            <div className="flex justify-between text-sm"><span className="text-green-100">Registered Properties</span><span className="font-semibold">32%</span></div>
-            <div className="flex justify-between text-sm"><span className="text-green-100">Current Collection Rate</span><span className="font-semibold">45%</span></div>
+            <div className="flex justify-between text-sm"><span className="text-green-100">Identified Properties</span><span className="font-semibold">{stats.totalBuildings.toLocaleString()}</span></div>
+            <div className="flex justify-between text-sm"><span className="text-green-100">Taxable Area</span><span className="font-semibold">{(stats.totalArea / 1e6).toFixed(2)} km²</span></div>
             <div className="flex justify-between text-sm"><span className="text-green-100">Potential Increase</span><span className="font-semibold text-emerald-300">+185%</span></div>
           </div>
         </div>

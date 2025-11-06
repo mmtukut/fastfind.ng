@@ -1,113 +1,116 @@
 'use client';
 
-import 'mapbox-gl/dist/mapbox-gl.css';
-import Map, { MapLayerMouseEvent } from 'react-map-gl';
-import { useEffect, useState } from 'react';
+import { Map, AdvancedMarker } from '@vis.gl/react-google-maps';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { Building } from '@/types';
-import { BuildingLayer } from './BuildingLayer';
 import { BuildingPopup } from './BuildingPopup';
 import { Skeleton } from '../ui/skeleton';
 import { useStore } from '@/store/buildingStore';
+import { useDebounce } from '@/hooks/use-debounce';
+
+const MAP_ID = 'b8e9b5d759556b26';
 
 export default function MapView() {
+  const { activeFilters, setFilteredBuildings } = useStore();
   const [data, setData] = useState<GeoJSON.FeatureCollection>();
   const [loading, setLoading] = useState(true);
   const [selectedBuilding, setSelectedBuilding] = useState<Building | null>(null);
-  const { activeFilters } = useStore();
+  const [bounds, setBounds] = useState<google.maps.LatLngBounds | null>(null);
+  const debouncedBounds = useDebounce(bounds, 500);
 
-  useEffect(() => {
+  const fetchData = useCallback(async (currentBounds: google.maps.LatLngBounds | null) => {
+    if (!currentBounds) return;
     setLoading(true);
-    // Fetch initial data
-    fetch('/api/buildings')
-      .then(resp => resp.json())
-      .then(json => {
-        setData(json);
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error("Could not load building data", err);
-        setLoading(false);
-      });
+
+    const north = currentBounds.getNorthEast().lat();
+    const south = currentBounds.getSouthWest().lat();
+    const east = currentBounds.getNorthEast().lng();
+    const west = currentBounds.getSouthWest().lng();
+    
+    const url = `/api/buildings?north=${north}&south=${south}&east=${east}&west=${west}`;
+
+    try {
+      const resp = await fetch(url);
+      const json = await resp.json();
+      setData(json);
+    } catch (err) {
+      console.error("Could not load building data", err);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => {
-    if (!data) return;
-
-    const filteredFeatures = data.features.filter(feature => {
-      const { properties } = feature;
-      if (!properties) return false;
-
-      const typeMatch = activeFilters.selectedTypes.length === 0 || activeFilters.selectedTypes.includes(properties.type);
-      const sizeMatch = properties.area_in_meters >= activeFilters.sizeRange[0] && properties.area_in_meters <= activeFilters.sizeRange[1];
-      const confidenceMatch = properties.confidence * 100 >= activeFilters.confidence;
-
-      return typeMatch && sizeMatch && confidenceMatch;
-    });
-
-    // Create a new GeoJSON object for the filtered data
-    const filteredData = {
-      ...data,
-      features: filteredFeatures
-    };
-    
-    // In a real app you might set this filtered data to a different state
-    // But for now, we'll just log it. The building layer itself will need to be updated to use this.
-    // For simplicity, we are not creating a separate state for filtered data to display.
-    // We will just filter the data on the fly when passing to the layer.
-
-  }, [activeFilters, data]);
-
-  const handleMapClick = (event: MapLayerMouseEvent) => {
-    const feature = event.features && event.features[0];
-    if (feature) {
-        const building: Building = {
-            id: feature.id as string | number,
-            properties: feature.properties as any,
-            geometry: feature.geometry as any,
-        };
-        setSelectedBuilding(building);
+    if(debouncedBounds) {
+      fetchData(debouncedBounds);
     }
+  }, [debouncedBounds, fetchData]);
+
+  const handleCameraChange = (ev: { detail: { bounds: google.maps.LatLngBounds; }; }) => {
+    setBounds(ev.detail.bounds);
   };
 
-  const getFilteredData = () => {
-    if (!data) return undefined;
-
-    const filteredFeatures = data.features.filter(feature => {
+  const filteredData = useMemo(() => {
+    if (!data) return [];
+    
+    const features = data.features.filter(feature => {
       const { properties } = feature;
       if (!properties) return false;
       
       const typeMatch = activeFilters.selectedTypes.length === 0 || activeFilters.selectedTypes.includes(properties.type);
-      const sizeMatch = properties.area_in_meters >= activeFilters.sizeRange[0] && (activeFilters.sizeRange[1] >= 2000 ? true : properties.area_in_meters <= activeFilters.sizeRange[1]);
-      const confidenceMatch = properties.confidence >= activeFilters.confidence / 100;
+      const sizeMatch = (properties.area_in_meters || 0) >= activeFilters.sizeRange[0] && (activeFilters.sizeRange[1] >= 2000 ? true : (properties.area_in_meters || 0) <= activeFilters.sizeRange[1]);
+      const confidenceMatch = (properties.confidence || 0) * 100 >= activeFilters.confidence;
 
       return typeMatch && sizeMatch && confidenceMatch;
     });
 
-    return {
-      ...data,
-      features: filteredFeatures
-    };
-  }
+    setFilteredBuildings(features as Building[]);
+    return features as Building[];
+  }, [data, activeFilters, setFilteredBuildings]);
 
-  if (loading) {
+
+  if (loading && !data) {
     return <Skeleton className="w-full h-full" />;
   }
+  
+  const typeColors: { [key: string]: string } = {
+    residential: '#10B981',
+    commercial: '#F59E0B',
+    industrial: '#A855F7',
+    institutional: '#0EA5E9',
+    'mixed-use': '#6B7280',
+  };
 
   return (
-    <Map
-      mapboxAccessToken={process.env.NEXT_PUBLIC_MAPBOX_TOKEN}
-      initialViewState={{
-        longitude: 11.166,
-        latitude: 10.286,
-        zoom: 13,
-      }}
-      style={{ width: '100%', height: '100%' }}
-      mapStyle="mapbox://styles/mapbox/light-v11"
-      interactiveLayerIds={['buildings']}
-      onClick={handleMapClick}
-    >
-      <BuildingLayer data={getFilteredData()} />
-      {selectedBuilding && <BuildingPopup building={selectedBuilding} onClose={() => setSelectedBuilding(null)} />}
-    </Map>
+    <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+        {loading && <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 bg-white/80 backdrop-blur-sm p-2 px-4 rounded-full text-sm font-medium shadow-md animate-pulse">Loading data...</div>}
+        <Map
+            defaultCenter={{ lat: 10.286, lng: 11.166 }}
+            defaultZoom={13}
+            mapId={MAP_ID}
+            disableDefaultUI={true}
+            onCameraChanged={handleCameraChange}
+            gestureHandling="greedy"
+        >
+            {filteredData.map((building) => {
+                const coords = (building.geometry as GeoJSON.Point).coordinates;
+                const position = { lng: coords[0], lat: coords[1] };
+                const color = typeColors[building.properties.type] || '#6B7280';
+                return (
+                    <AdvancedMarker 
+                        key={building.id} 
+                        position={position}
+                        onClick={() => setSelectedBuilding(building)}
+                    >
+                         <div
+                            className="w-3 h-3 rounded-full border-2 border-white transition-transform transform hover:scale-150"
+                            style={{ backgroundColor: color, boxShadow: `0 0 8px ${color}` }}
+                        />
+                    </AdvancedMarker>
+                )
+            })}
+        </Map>
+        {selectedBuilding && <BuildingPopup building={selectedBuilding} onClose={() => setSelectedBuilding(null)} />}
+    </div>
   );
 }
