@@ -15,7 +15,7 @@ const buildingTypes = [
   { id: 'residential', icon: Home, label: 'Residential', color: 'emerald', count: 37245 },
   { id: 'commercial', icon: Store, label: 'Commercial', color: 'amber', count: 8932 },
   { id: 'industrial', icon: Factory, label: 'Industrial', color: 'purple', count: 2456 },
-  { id: 'institutional', icon: School, label: 'sky', count: 1267 },
+  { id: 'institutional', icon: School, label: 'Institutional', color: 'sky', count: 1267 },
 ];
 
 const typeStyles: { [key: string]: { border: string; bg: string; iconContainer: string; icon: string; text: string; } } = {
