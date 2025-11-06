@@ -7,6 +7,8 @@ import { BuildingPopup } from './BuildingPopup';
 import { Skeleton } from '../ui/skeleton';
 import { useStore } from '@/store/buildingStore';
 import { useDebounce } from '@/hooks/use-debounce';
+import { Button } from '../ui/button';
+import { Map as MapIcon, Satellite } from 'lucide-react';
 
 const MAP_ID = 'b8e9b5d759556b26';
 
@@ -17,6 +19,7 @@ export default function MapView() {
   const [selectedBuilding, setSelectedBuilding] = useState<Building | null>(null);
   const [bounds, setBounds] = useState<google.maps.LatLngBounds | null>(null);
   const debouncedBounds = useDebounce(bounds, 500);
+  const [mapTypeId, setMapTypeId] = useState('roadmap');
 
   const fetchData = useCallback(async (currentBounds: google.maps.LatLngBounds | null) => {
     if (!currentBounds) return;
@@ -78,22 +81,46 @@ export default function MapView() {
     commercial: '#F59E0B',
     industrial: '#A855F7',
     institutional: '#0EA5E9',
-    'mixed-use': '#6B7280',
   };
 
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative' }}>
         {loading && <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 bg-white/80 backdrop-blur-sm p-2 px-4 rounded-full text-sm font-medium shadow-md animate-pulse">Loading data...</div>}
+        
+        <div className="absolute top-4 right-4 z-10 flex flex-col gap-2">
+            <Button
+                size="icon"
+                variant={mapTypeId === 'roadmap' ? 'default' : 'outline'}
+                onClick={() => setMapTypeId('roadmap')}
+                className="bg-white text-gray-800 hover:bg-gray-100 shadow-md"
+            >
+                <MapIcon className="w-5 h-5" />
+            </Button>
+            <Button
+                size="icon"
+                variant={mapTypeId === 'satellite' ? 'default' : 'outline'}
+                onClick={() => setMapTypeId('satellite')}
+                className="bg-white text-gray-800 hover:bg-gray-100 shadow-md"
+            >
+                <Satellite className="w-5 h-5" />
+            </Button>
+        </div>
+        
         <Map
             defaultCenter={{ lat: 10.286, lng: 11.166 }}
             defaultZoom={13}
             mapId={MAP_ID}
+            mapTypeId={mapTypeId}
             disableDefaultUI={true}
             onCameraChanged={handleCameraChange}
             gestureHandling="greedy"
+            style={{width: '100%', height: '100%'}}
         >
             {filteredData.map((building) => {
+                if (!building.geometry) return null;
                 const coords = (building.geometry as GeoJSON.Point).coordinates;
+                if (!coords || coords.length < 2) return null;
+
                 const position = { lng: coords[0], lat: coords[1] };
                 const color = typeColors[building.properties.type] || '#6B7280';
                 return (

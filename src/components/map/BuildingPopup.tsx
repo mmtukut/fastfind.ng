@@ -11,7 +11,6 @@ const typeColors: { [key: string]: string } = {
     commercial: 'bg-amber-100 text-amber-800',
     industrial: 'bg-purple-100 text-purple-800',
     institutional: 'bg-sky-100 text-sky-800',
-    'mixed-use': 'bg-gray-200 text-gray-800',
 };
 
 
@@ -28,7 +27,7 @@ export function BuildingPopup({ building, onClose }: {building: Building, onClos
 
   const confidenceLevel = confidence * 100 >= 90 ? 'High' : confidence * 100 >= 75 ? 'Medium' : 'Low';
   const confidenceColor = confidence * 100 >= 90 ? 'text-emerald-600' : confidence * 100 >= 75 ? 'text-amber-600' : 'text-red-600';
-  const buildingType = properties.type || 'mixed-use';
+  const buildingType = properties.type || 'residential';
 
   return (
     <InfoWindow
@@ -42,7 +41,7 @@ export function BuildingPopup({ building, onClose }: {building: Building, onClos
         <div className="p-4">
             <div className="flex justify-between items-start mb-2">
                 <h3 className="font-bold text-base text-gray-800">Property ID</h3>
-                <Badge className={`${typeColors[buildingType] || typeColors['mixed-use']} capitalize`}>{buildingType}</Badge>
+                <Badge className={`${typeColors[buildingType] || typeColors['residential']} capitalize`}>{buildingType}</Badge>
             </div>
             <p className="text-sm text-gray-500 -mt-2 mb-3">{properties.id || building.id}</p>
             <Separator className="my-2 bg-gray-200"/>
