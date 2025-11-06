@@ -1,6 +1,6 @@
 'use client';
-
 import 'mapbox-gl/dist/mapbox-gl.css';
+
 import { AdminDashboard } from '@/components/admin/AdminDashboard';
 import { FilterPanel } from '@/components/filters/FilterPanel';
 import { DashboardNavbar } from '@/components/layout/DashboardNavbar';
@@ -9,7 +9,13 @@ import MapView from '@/components/map/MapView';
 import { useStore } from '@/store/buildingStore';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { BarChart3, SlidersHorizontal } from 'lucide-react';
 
@@ -34,31 +40,43 @@ export default function Dashboard() {
               <MapView />
               {isMobile && (
                 <>
-                <Sheet>
-                  <SheetTrigger asChild>
-                    <Button className="absolute bottom-4 left-4 md:hidden z-10 shadow-lg" size="lg">
-                      <SlidersHorizontal className="mr-2 h-5 w-5" />
-                      Filters
-                    </Button>
-                  </SheetTrigger>
-                  <SheetContent side="left" className="w-[85vw] p-0 border-r-2">
-                     <FilterPanel />
-                  </SheetContent>
-                </Sheet>
-                <Sheet>
-                  <SheetTrigger asChild>
-                    <Button className="absolute bottom-4 right-4 md:hidden z-10 shadow-lg" size="lg">
-                      <BarChart3 className="mr-2 h-5 w-5" />
-                      Intelligence
-                    </Button>
-                  </SheetTrigger>
-                  <SheetContent side="bottom" className="h-[80vh] p-0 border-t-2">
+                  <Sheet>
+                    <SheetTrigger asChild>
+                      <Button
+                        className="absolute bottom-4 left-4 md:hidden z-10 shadow-lg"
+                        size="lg"
+                      >
+                        <SlidersHorizontal className="mr-2 h-5 w-5" />
+                        Filters
+                      </Button>
+                    </SheetTrigger>
+                    <SheetContent
+                      side="left"
+                      className="w-[85vw] p-0 border-r-2"
+                    >
+                      <FilterPanel />
+                    </SheetContent>
+                  </Sheet>
+                  <Sheet>
+                    <SheetTrigger asChild>
+                      <Button
+                        className="absolute bottom-4 right-4 md:hidden z-10 shadow-lg"
+                        size="lg"
+                      >
+                        <BarChart3 className="mr-2 h-5 w-5" />
+                        Intelligence
+                      </Button>
+                    </SheetTrigger>
+                    <SheetContent
+                      side="bottom"
+                      className="h-[80vh] p-0 border-t-2"
+                    >
                       <SheetHeader className="p-4 border-b">
                         <SheetTitle>Intelligence Panel</SheetTitle>
                       </SheetHeader>
-                     <StatsPanel />
-                  </SheetContent>
-                </Sheet>
+                      <StatsPanel />
+                    </SheetContent>
+                  </Sheet>
                 </>
               )}
             </div>
