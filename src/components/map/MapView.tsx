@@ -10,6 +10,10 @@ import { useDebounce } from '@/hooks/use-debounce';
 import { Button } from '../ui/button';
 import { Map as MapIcon, Satellite } from 'lucide-react';
 import { LngLatBounds } from 'mapbox-gl';
+import getConfig from 'next/config';
+
+const { publicRuntimeConfig } = getConfig();
+const MAPBOX_ACCESS_TOKEN = publicRuntimeConfig.mapboxAccessToken;
 
 export default function MapView() {
   const { activeFilters, setFilteredBuildings } = useStore();
@@ -172,7 +176,7 @@ export default function MapView() {
             onMove={evt => setViewState(evt.viewState)}
             onLoad={onMapLoad}
             onMoveEnd={handleCameraChange}
-            mapboxAccessToken={process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN}
+            mapboxAccessToken={MAPBOX_ACCESS_TOKEN}
             style={{width: '100%', height: '100%'}}
             mapStyle={mapStyle}
             interactiveLayerIds={['buildings']}
