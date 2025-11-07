@@ -18,10 +18,37 @@ import {
 } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { BarChart3, SlidersHorizontal } from 'lucide-react';
+import { useEffect } from 'react';
+import { parseGombeBuildingsCSV } from '@/lib/csv-parser';
+import { BuildingDetailModal } from '@/components/map/BuildingDetailModal';
 
 export default function Dashboard() {
   const isAdminView = useStore((state) => state.isAdminView);
   const isMobile = useIsMobile();
+  const { setBuildings, setIsLoading, setError, selectedBuildingId } = useStore();
+
+  useEffect(() => {
+    async function loadData() {
+      setIsLoading(true);
+      try {
+        const response = await fetch('/data/buildings/gombe_buildings.csv');
+        if (!response.ok) {
+          throw new Error('Failed to fetch building data');
+        }
+        const csvText = await response.text();
+        const buildings = await parseGombeBuildingsCSV(csvText);
+        setBuildings(buildings);
+        setError(null);
+      } catch (e: any) {
+        console.error('Failed to load or parse building data:', e);
+        setError(e.message);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    loadData();
+  }, [setBuildings, setIsLoading, setError]);
+
 
   return (
     <div className="flex flex-col h-screen bg-gray-50 text-gray-800 font-body antialiased">
@@ -54,6 +81,9 @@ export default function Dashboard() {
                       side="left"
                       className="w-[85vw] p-0 border-r-2"
                     >
+                       <SheetHeader className="p-4 border-b">
+                        <SheetTitle>Filters</SheetTitle>
+                      </SheetHeader>
                       <FilterPanel />
                     </SheetContent>
                   </Sheet>
@@ -86,6 +116,7 @@ export default function Dashboard() {
           </div>
         )}
       </main>
+      {selectedBuildingId && <BuildingDetailModal />}
     </div>
   );
 }

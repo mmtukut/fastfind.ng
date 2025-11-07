@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Home, Store, Factory, School, Check, SlidersHorizontal, X } from 'lucide-react';
+import { Home, Store, Factory, School, Check, SlidersHorizontal, X, Building } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -12,17 +12,19 @@ import { Badge } from '../ui/badge';
 import { ScrollArea } from '../ui/scroll-area';
 
 const buildingTypes = [
-  { id: 'residential', icon: Home, label: 'Residential', color: 'emerald', count: 37245 },
-  { id: 'commercial', icon: Store, label: 'Commercial', color: 'amber', count: 8932 },
-  { id: 'industrial', icon: Factory, label: 'Industrial', color: 'purple', count: 2456 },
-  { id: 'institutional', icon: School, label: 'Institutional', color: 'sky', count: 1267 },
+  { id: 'residential', icon: Home, label: 'Residential', color: 'blue' },
+  { id: 'commercial', icon: Store, label: 'Commercial', color: 'amber' },
+  { id: 'industrial', icon: Factory, label: 'Industrial', color: 'purple' },
+  { id: 'institutional', icon: School, label: 'Institutional', color: 'emerald' },
+  { id: 'mixed', icon: Building, label: 'Mixed-Use', color: 'gray' },
 ];
 
 const typeStyles: { [key: string]: { border: string; bg: string; iconContainer: string; icon: string; text: string; } } = {
-  emerald: { border: 'border-emerald-300', bg: 'bg-emerald-50', iconContainer: 'bg-emerald-100', icon: 'text-emerald-600', text: 'text-emerald-800' },
+  blue: { border: 'border-blue-300', bg: 'bg-blue-50', iconContainer: 'bg-blue-100', icon: 'text-blue-600', text: 'text-blue-800' },
   amber: { border: 'border-amber-300', bg: 'bg-amber-50', iconContainer: 'bg-amber-100', icon: 'text-amber-600', text: 'text-amber-800' },
   purple: { border: 'border-purple-300', bg: 'bg-purple-50', iconContainer: 'bg-purple-100', icon: 'text-purple-600', text: 'text-purple-800' },
-  sky: { border: 'border-sky-300', bg: 'bg-sky-50', iconContainer: 'bg-sky-100', icon: 'text-sky-600', text: 'text-sky-800' },
+  emerald: { border: 'border-emerald-300', bg: 'bg-emerald-50', iconContainer: 'bg-emerald-100', icon: 'text-emerald-600', text: 'text-emerald-800' },
+  gray: { border: 'border-gray-300', bg: 'bg-gray-50', iconContainer: 'bg-gray-100', icon: 'text-gray-600', text: 'text-gray-800' },
 };
 
 export function FilterPanel() {
@@ -33,6 +35,8 @@ export function FilterPanel() {
     setConfidence, 
     resetFilters,
     applyFilters,
+    allBuildings,
+    filteredBuildings,
     activeFilters,
   } = useStore();
   
@@ -45,10 +49,13 @@ export function FilterPanel() {
     setSelectedTypes(newTypes);
   };
 
-  const totalBuildings = buildingTypes.reduce((sum, t) => sum + t.count, 0);
-  const filteredCount = buildingTypes
-    .filter(t => activeFilters.selectedTypes.length > 0 ? activeFilters.selectedTypes.includes(t.id) : true)
-    .reduce((sum, t) => sum + t.count, 0);
+  const totalBuildings = allBuildings.length;
+  const filteredCount = filteredBuildings.length;
+  const isAnyFilterActive = 
+      activeFilters.selectedTypes.length > 0 ||
+      activeFilters.sizeRange[0] > 0 ||
+      activeFilters.sizeRange[1] < 2000 ||
+      activeFilters.confidence > 0;
 
   if (isCollapsed) {
     return (
@@ -60,6 +67,10 @@ export function FilterPanel() {
     );
   }
 
+  const getBuildingCountForType = (typeId: string) => {
+    return allBuildings.filter(b => b.properties.classification === typeId).length;
+  }
+
   return (
     <aside className="w-96 bg-white border-r border-gray-200 flex flex-col shrink-0">
       <header className="p-6 border-b border-gray-200">
@@ -67,12 +78,9 @@ export function FilterPanel() {
           <CardTitle className="text-lg font-bold text-gray-900">Filters</CardTitle>
           <div className="flex items-center gap-4">
             <Button onClick={resetFilters} variant="link" className="p-0 h-auto text-primary">Reset</Button>
-            <Button onClick={() => setIsCollapsed(true)} variant="ghost" size="icon" className="rounded-lg text-gray-500">
-              <X className="w-4 h-4" />
-            </Button>
           </div>
         </div>
-        <p className="mt-4 text-sm text-gray-600">Showing <span className="font-bold text-primary">{filteredCount.toLocaleString()}</span> of {totalBuildings.toLocaleString()} total buildings</p>
+        <p className="mt-4 text-sm text-gray-600">Showing <span className="font-bold text-primary">{isAnyFilterActive ? filteredCount.toLocaleString() : totalBuildings.toLocaleString() }</span> of {totalBuildings.toLocaleString()} total buildings</p>
       </header>
       
       <ScrollArea className="flex-1">
@@ -84,6 +92,7 @@ export function FilterPanel() {
                 const Icon = type.icon;
                 const isSelected = filters.selectedTypes.includes(type.id);
                 const styles = typeStyles[type.color];
+                const count = getBuildingCountForType(type.id);
                 return (
                   <button
                     key={type.id}
@@ -98,7 +107,7 @@ export function FilterPanel() {
                       </div>
                       <div>
                         <p className={`font-semibold text-left ${isSelected ? styles.text : 'text-gray-800'}`}>{type.label}</p>
-                        <p className="text-sm text-gray-500 text-left">{type.count.toLocaleString()} buildings</p>
+                        <p className="text-sm text-gray-500 text-left">{count.toLocaleString()} buildings</p>
                       </div>
                     </div>
                     <AnimatePresence>
@@ -120,11 +129,11 @@ export function FilterPanel() {
           </div>
           
           <div className="space-y-4">
-            <Label className="font-bold text-base text-gray-900">Building Size</Label>
+            <Label className="font-bold text-base text-gray-900">Building Size (m²)</Label>
             <div className="px-1">
               <div className="flex justify-between text-sm font-medium text-gray-700 mb-2">
-                <span>{filters.sizeRange[0]} m²</span>
-                <span>{filters.sizeRange[1] >= 2000 ? '2000+ m²' : `${filters.sizeRange[1]} m²`}</span>
+                <span>{filters.sizeRange[0]}</span>
+                <span>{filters.sizeRange[1] >= 2000 ? '2000+' : filters.sizeRange[1]}</span>
               </div>
               <Slider 
                 min={0} max={2000} step={10} 
