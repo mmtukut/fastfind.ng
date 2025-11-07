@@ -1,14 +1,8 @@
-
 'use client';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
-import { AdminDashboard } from '@/components/admin/AdminDashboard';
-import { FilterPanel } from '@/components/filters/FilterPanel';
-import { DashboardNavbar } from '@/components/layout/DashboardNavbar';
-import { StatsPanel } from '@/components/dashboard/StatsPanel';
 import MapView from '@/components/map/MapView';
 import { useStore } from '@/store/buildingStore';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { useIsMobile } from '@/hooks/use-mobile';
 import {
   Sheet,
@@ -53,16 +47,16 @@ export default function Dashboard() {
 
   return (
     <div className="flex flex-col h-screen bg-gray-50 text-gray-800 font-body antialiased">
-      <DashboardNavbar />
       <main className="flex-1 flex overflow-hidden">
         {isAdminView ? (
-          <ScrollArea className="w-full">
-            <AdminDashboard />
-          </ScrollArea>
+          <div className="w-full flex items-center justify-center">
+            <p className="text-2xl text-gray-500">Admin View is temporarily unavailable.</p>
+          </div>
         ) : (
           <div className="flex flex-1 overflow-hidden">
-            <div className="hidden md:block">
-              <FilterPanel />
+            <div className="hidden md:block w-96 bg-white border-r border-gray-200 p-6">
+              <h2 class="text-lg font-bold">Filters</h2>
+              <p class="text-sm text-gray-500">Filters are currently unavailable.</p>
             </div>
             <div className="flex-1 flex flex-col overflow-hidden relative">
               <MapView 
@@ -89,7 +83,9 @@ export default function Dashboard() {
                        <SheetHeader className="p-4 border-b">
                         <SheetTitle>Filters</SheetTitle>
                       </SheetHeader>
-                      <FilterPanel />
+                      <div className="p-6">
+                        <p>Filters are currently unavailable.</p>
+                      </div>
                     </SheetContent>
                   </Sheet>
                   <Sheet>
@@ -109,14 +105,17 @@ export default function Dashboard() {
                       <SheetHeader className="p-4 border-b">
                         <SheetTitle>Intelligence Panel</SheetTitle>
                       </SheetHeader>
-                      <StatsPanel />
+                       <div className="p-6">
+                        <p>The intelligence panel is currently unavailable.</p>
+                      </div>
                     </SheetContent>
                   </Sheet>
                 </>
               )}
             </div>
-            <div className="hidden lg:block">
-              <StatsPanel />
+            <div className="hidden lg:block w-80 bg-white border-l border-gray-200 p-6">
+               <h2 class="text-lg font-bold">Intelligence</h2>
+               <p class="text-sm text-gray-500">The intelligence panel is currently unavailable.</p>
             </div>
           </div>
         )}
