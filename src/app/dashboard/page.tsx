@@ -1,3 +1,4 @@
+
 'use client';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
@@ -25,7 +26,7 @@ import { BuildingDetailModal } from '@/components/map/BuildingDetailModal';
 export default function Dashboard() {
   const isAdminView = useStore((state) => state.isAdminView);
   const isMobile = useIsMobile();
-  const { setBuildings, setIsLoading, setError, selectedBuildingId } = useStore();
+  const { setBuildings, setIsLoading, setError, selectedBuildingId, filteredBuildings, setSelectedBuildingId } = useStore();
 
   useEffect(() => {
     async function loadData() {
@@ -64,7 +65,11 @@ export default function Dashboard() {
               <FilterPanel />
             </div>
             <div className="flex-1 flex flex-col overflow-hidden relative">
-              <MapView />
+              <MapView 
+                buildings={filteredBuildings}
+                onBuildingClick={(id) => setSelectedBuildingId(id)}
+                selectedBuildingId={selectedBuildingId}
+              />
               {isMobile && (
                 <>
                   <Sheet>

@@ -1,36 +1,45 @@
+
 'use client';
 
 import { useRef, useEffect, useState } from 'react';
-import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
-import { useStore } from '@/store/buildingStore';
-import { Skeleton } from '../ui/skeleton';
+import mapboxgl, { Map as MapboxMap } from 'mapbox-gl';
 import { Building } from '@/types';
+import { Skeleton } from '../ui/skeleton';
+import { useStore } from '@/store/buildingStore';
 
-mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || '';
+const MAPBOX_ACCESS_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN || '';
+if (!MAPBOX_ACCESS_TOKEN) {
+    console.error('Mapbox Access Token is not set!');
+}
+mapboxgl.accessToken = MAPBOX_ACCESS_TOKEN;
 
 const classificationColors: Record<Building['properties']['classification'], string> = {
-  residential: '#3B82F6',
-  commercial: '#F59E0B',
-  industrial: '#8B5CF6',
-  institutional: '#10B981',
-  mixed: '#6B7280',
+  residential: '#3B82F6', // blue
+  commercial: '#F59E0B', // amber
+  industrial: '#8B5CF6', // purple
+  institutional: '#10B981', // emerald
+  mixed: '#6B7280', // gray
 };
 
-export default function MapView() {
+interface MapViewProps {
+    buildings: Building[];
+    onBuildingClick: (buildingId: string) => void;
+    selectedBuildingId: string | null;
+}
+
+export default function MapView({ buildings, onBuildingClick, selectedBuildingId }: MapViewProps) {
   const mapContainer = useRef<HTMLDivElement | null>(null);
-  const map = useRef<mapboxgl.Map | null>(null);
-  const { isLoading, error, filteredBuildings, setSelectedBuildingId, selectedBuildingId } = useStore();
+  const map = useRef<MapboxMap | null>(null);
+  const { isLoading, error } = useStore();
   const [mapLoaded, setMapLoaded] = useState(false);
   
-  // Initialize map
   useEffect(() => {
-    if (map.current || !mapContainer.current) return; // Initialize map only once
+    if (map.current || !mapContainer.current) return;
 
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
       style: 'mapbox://styles/mapbox/satellite-streets-v12',
-      center: [11.1672, 10.2897], // Gombe coordinates
+      center: [11.1672, 10.2897],
       zoom: 12,
     });
 
@@ -43,28 +52,25 @@ export default function MapView() {
             const feature = e.features[0];
             const buildingId = feature.properties?.id;
             if (buildingId) {
-                setSelectedBuildingId(buildingId);
+                onBuildingClick(buildingId as string);
             }
         }
     });
 
-    // Change the cursor to a pointer when the mouse is over the buildings layer.
     map.current.on('mouseenter', 'buildings-fill', () => {
-        if(map.current) map.current.getCanvas().style.cursor = 'pointer';
+        if (map.current) map.current.getCanvas().style.cursor = 'pointer';
     });
 
-    // Change it back to a pointer when it leaves.
     map.current.on('mouseleave', 'buildings-fill', () => {
-        if(map.current) map.current.getCanvas().style.cursor = '';
+        if (map.current) map.current.getCanvas().style.cursor = '';
     });
 
     return () => {
       map.current?.remove();
       map.current = null;
     };
-  }, []);
+  }, [onBuildingClick]);
 
-  // Update map data when filteredBuildings change
   useEffect(() => {
     if (!mapLoaded || !map.current) return;
 
@@ -72,9 +78,9 @@ export default function MapView() {
 
     const geojsonData: GeoJSON.FeatureCollection = {
       type: 'FeatureCollection',
-      features: filteredBuildings.map(b => ({
+      features: buildings.map(b => ({
         type: 'Feature',
-        id: b.id, // Ensure numeric ID for feature state
+        id: b.id,
         geometry: b.geometry,
         properties: { ...b.properties, id: b.id },
       })),
@@ -88,7 +94,6 @@ export default function MapView() {
         data: geojsonData,
       });
 
-      // Add the main fill layer
       map.current.addLayer({
         id: 'buildings-fill',
         type: 'fill',
@@ -102,18 +107,16 @@ export default function MapView() {
             'industrial', classificationColors.industrial,
             'institutional', classificationColors.institutional,
             'mixed', classificationColors.mixed,
-            '#6B7280' // fallback color
+            '#6B7280'
           ],
           'fill-opacity': 0.7,
         },
       });
       
-       // Add outline for all buildings
       map.current.addLayer({
         id: 'buildings-outline',
         type: 'line',
         source: 'buildings',
-        layout: {},
         paint: {
           'line-color': '#FFFFFF',
           'line-width': 1,
@@ -121,30 +124,26 @@ export default function MapView() {
         },
       });
 
-      // Add highlight layer for selected building
       map.current.addLayer({
           id: 'building-selected-outline',
           type: 'line',
           source: 'buildings',
           paint: {
-              'line-color': '#FBBF24', // yellow
+              'line-color': '#FBBF24',
               'line-width': 3,
               'line-opacity': 1
           },
-          filter: ['==', ['get', 'id'], ''] // Initially no building is selected
+          filter: ['==', ['get', 'id'], '']
       });
     }
-  }, [mapLoaded, filteredBuildings]);
+  }, [mapLoaded, buildings]);
 
-  // Update selected building highlight
   useEffect(() => {
     if (!map.current || !mapLoaded) return;
-    
     map.current.setFilter('building-selected-outline', ['==', ['get', 'id'], selectedBuildingId || '']);
-
   }, [selectedBuildingId, mapLoaded]);
 
-  if (isLoading) {
+  if (isLoading && !mapLoaded) {
     return <Skeleton className="w-full h-full" />;
   }
 
