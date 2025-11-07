@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 import { Inter, Space_Grotesk } from 'next/font/google';
 import './globals.css';
-import { cn } from '@/lib/utils';
 
 const inter = Inter({ 
   subsets: ['latin'], 
@@ -32,7 +31,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
       {/* The default theme is dark, but pages can override it by adding 'light' to the html tag */}
-      <body className={cn(inter.variable, spaceGrotesk.variable)}>
+      <body className={`${inter.variable} ${spaceGrotesk.variable}`}>
         {children}
       </body>
     </html>
