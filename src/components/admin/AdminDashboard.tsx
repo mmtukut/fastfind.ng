@@ -11,10 +11,8 @@ import {
   ArrowUpRight,
   MapPin,
   Flag,
-  ShieldCheck,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useStore } from '@/store/buildingStore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -69,35 +67,10 @@ const riskStyles: { [key: string]: { bg: string; border: string; text: string; b
 };
 
 export function AdminDashboard() {
-  const { toggleAdminView } = useStore();
   const [selectedProperty, setSelectedProperty] = useState<string | null>(null);
 
   return (
-    <div className="min-h-screen w-full bg-gray-50 text-gray-900">
-      <header className="bg-white border-b border-gray-200">
-        <div className="max-w-[1920px] mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 bg-primary/10 text-primary rounded-lg flex items-center justify-center">
-                <Users className="w-6 h-6" />
-              </div>
-              <div>
-                <h1 className="text-xl font-bold">Admin Control Center</h1>
-                <p className="text-sm text-gray-500">Government Revenue Enforcement</p>
-              </div>
-              <Badge variant="destructive" className="ml-2 uppercase">Restricted Access</Badge>
-            </div>
-            <Button 
-              onClick={toggleAdminView}
-              variant="outline" 
-            >
-              Switch to Public View
-            </Button>
-          </div>
-        </div>
-      </header>
-      
-      <div className="max-w-[1920px] mx-auto p-6">
+    <div className="min-h-screen w-full bg-gray-50 text-gray-900 p-6">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           
           <main className="lg:col-span-2 space-y-6">
@@ -251,7 +224,6 @@ export function AdminDashboard() {
             </Card>
           </aside>
         </div>
-      </div>
     </div>
   );
 };
