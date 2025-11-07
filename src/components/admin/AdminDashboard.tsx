@@ -226,4 +226,4 @@ export function AdminDashboard() {
         </div>
     </div>
   );
-};
+}
