@@ -1,16 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-// This is a placeholder for your actual data fetching and filtering logic.
-// In a real app, you would get the data and apply filters similar to the frontend.
-async function getBuildingData() {
-  // In a real scenario, you'd fetch and filter this data.
-  // For this example, we'll just use the small sample.
-  const path = require('path');
-  const fs = require('fs').promises;
-  const filePath = path.join(process.cwd(), 'public', 'data', 'buildings', 'gombe_buildings.geojson');
-  const fileContent = await fs.readFile(filePath, 'utf8');
-  const geojsonData = JSON.parse(fileContent);
-  return geojsonData.features.map((feature: any) => feature.properties);
+async function getBuildingData(filters: any) {
+  const response = await fetch(process.env.NODE_ENV === 'production' 
+    ? 'http://localhost:9002/api/buildings' // Use the internal API route
+    : 'http://localhost:9002/api/buildings'
+  );
+  const geojsonData = await response.json();
+  
+  let features = geojsonData.features;
+
+  if (filters.types) {
+    const types = filters.types.split(',');
+    features = features.filter((feature: any) => types.includes(feature.properties.type));
+  }
+
+  if (filters.minSize || filters.maxSize) {
+    const minSize = parseFloat(filters.minSize || '0');
+    const maxSize = parseFloat(filters.maxSize || 'Infinity');
+    features = features.filter((feature: any) => 
+        feature.properties.area_in_meters >= minSize && feature.properties.area_in_meters <= maxSize
+    );
+  }
+
+  if (filters.confidence) {
+    // The confidence filter is 0-100, but the property confidence is 0-1
+    const minConfidence = parseFloat(filters.confidence) / 100;
+    features = features.filter((feature: any) => feature.properties.confidence >= minConfidence);
+  }
+
+  return features.map((feature: any) => feature.properties);
 }
 
 function convertToCSV(data: any[]) {
@@ -21,8 +39,12 @@ function convertToCSV(data: any[]) {
   const csvRows = [
     headers.join(','),
     ...data.map(row => 
-      headers.map(header => JSON.stringify(row[header], (key, value) => value === null ? '' : value))
-      .join(',')
+      headers.map(header => {
+        const value = row[header];
+        // Handle values that contain commas by wrapping them in quotes
+        const stringValue = String(value === null || value === undefined ? '' : value);
+        return stringValue.includes(',') ? `"${stringValue}"` : stringValue;
+      }).join(',')
     )
   ];
   return csvRows.join('\n');
@@ -30,7 +52,15 @@ function convertToCSV(data: any[]) {
 
 export async function GET(req: NextRequest) {
   try {
-    const buildingData = await getBuildingData();
+    const { searchParams } = new URL(req.url);
+    const filters = {
+      types: searchParams.get('types'),
+      minSize: searchParams.get('minSize'),
+      maxSize: searchParams.get('maxSize'),
+      confidence: searchParams.get('confidence'),
+    };
+
+    const buildingData = await getBuildingData(filters);
     const csvData = convertToCSV(buildingData);
     
     return new NextResponse(csvData, {
