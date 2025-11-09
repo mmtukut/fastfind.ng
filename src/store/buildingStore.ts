@@ -1,93 +1,68 @@
 import { Building } from '@/types';
 import { create } from 'zustand';
-import { produce } from 'immer';
+
+const allBuildingTypes = [
+  'residential',
+  'commercial',
+  'industrial',
+  'institutional',
+];
 
 interface BuildingState {
   // Global App State
   isAdminView: boolean;
   toggleAdminView: () => void;
   
-  // Data State
-  allBuildings: Building[];
-  isLoading: boolean;
-  error: string | null;
-  setBuildings: (buildings: Building[]) => void;
-  setIsLoading: (isLoading: boolean) => void;
-  setError: (error: string | null) => void;
-
-  // Map State
-  selectedBuildingId: string | null;
-  setSelectedBuildingId: (id: string | null) => void;
-  
-  // Filter State
+  // Map/Data Filters
   filters: {
     selectedTypes: string[];
     sizeRange: [number, number];
     confidence: number;
   };
-  activeFilters: BuildingState['filters'];
-  filteredBuildings: Building[]; // Derived from allBuildings and activeFilters
 
-  // Filter Actions
+  // Actions
   setSelectedTypes: (types: string[]) => void;
   setSizeRange: (range: [number, number]) => void;
   setConfidence: (confidence: number) => void;
   resetFilters: () => void;
   applyFilters: () => void;
+
+  // Filtered data (this is the data currently visible on the map)
+  filteredBuildings: Building[]; 
+  setFilteredBuildings: (buildings: Building[]) => void;
+
+  // Active filters that are applied to the map
+  activeFilters: BuildingState['filters'];
 }
 
 const initialFilterState = {
   selectedTypes: [],
   sizeRange: [0, 2000] as [number, number],
-  confidence: 0, // Show all by default
+  confidence: 70,
 };
 
-export const useStore = create<BuildingState>((set, get) => ({
+export const useStore = create<BuildingState>((set) => ({
   // App state
   isAdminView: false,
-  toggleAdminView: () => set(produce(state => { state.isAdminView = !state.isAdminView; })),
-
-  // Data state
-  allBuildings: [],
-  isLoading: true,
-  error: null,
-  setBuildings: (buildings) => set(produce(state => {
-    state.allBuildings = buildings;
-    // Initially, filtered buildings are all buildings
-    state.filteredBuildings = buildings;
-  })),
-  setIsLoading: (isLoading) => set(produce(state => { state.isLoading = isLoading; })),
-  setError: (error) => set(produce(state => { state.error = error; })),
-
-  // Map state
-  selectedBuildingId: null,
-  setSelectedBuildingId: (id) => set(produce(state => { state.selectedBuildingId = id; })),
+  toggleAdminView: () => set((state) => ({ isAdminView: !state.isAdminView })),
 
   // Filter state
   filters: initialFilterState,
   activeFilters: initialFilterState,
-  filteredBuildings: [],
 
-  // Filter Actions
-  setSelectedTypes: (types) => set(produce(state => { state.filters.selectedTypes = types; })),
-  setSizeRange: (range) => set(produce(state => { state.filters.sizeRange = range; })),
-  setConfidence: (confidence) => set(produce(state => { state.filters.confidence = confidence; })),
+  // Actions
+  setSelectedTypes: (types) => set((state) => ({ filters: { ...state.filters, selectedTypes: types } })),
+  setSizeRange: (range) => set((state) => ({ filters: { ...state.filters, sizeRange: range } })),
+  setConfidence: (confidence) => set((state) => ({ filters: { ...state.filters, confidence: confidence } })),
   
-  resetFilters: () => set(produce(state => {
-    state.filters = initialFilterState;
-    state.activeFilters = initialFilterState;
-    state.filteredBuildings = state.allBuildings; // Reset to show all
+  resetFilters: () => set((state) => ({
+    filters: initialFilterState,
+    activeFilters: initialFilterState
   })),
 
-  applyFilters: () => set(produce(state => {
-    state.activeFilters = state.filters;
-    const { selectedTypes, sizeRange, confidence } = state.activeFilters;
-    state.filteredBuildings = state.allBuildings.filter(b => {
-        const props = b.properties;
-        const typeMatch = selectedTypes.length === 0 || selectedTypes.includes(props.classification);
-        const sizeMatch = props.area_in_meters >= sizeRange[0] && props.area_in_meters <= (sizeRange[1] === 2000 ? Infinity : sizeRange[1]);
-        const confidenceMatch = props.confidence * 100 >= confidence;
-        return typeMatch && sizeMatch && confidenceMatch;
-    });
-  })),
+  applyFilters: () => set(state => ({ activeFilters: state.filters })),
+  
+  // Filtered data
+  filteredBuildings: [],
+  setFilteredBuildings: (buildings) => set({ filteredBuildings: buildings }),
 }));

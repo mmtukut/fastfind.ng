@@ -1,5 +1,5 @@
 import { config } from 'dotenv';
 config();
 
-import './flows/classify-new-buildings.ts';
-import './flows/retrieve-building-records.ts';
+import '@/ai/flows/classify-new-buildings.ts';
+import '@/ai/flows/retrieve-building-records.ts';

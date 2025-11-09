@@ -17,7 +17,7 @@ import { Progress } from '../ui/progress';
 import { useStore } from '@/store/buildingStore';
 import Link from 'next/link';
 import { Button } from '../ui/button';
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import { formatCurrency } from '@/lib/utils';
 import { ScrollArea } from '../ui/scroll-area';
 
@@ -29,15 +29,14 @@ const metricStyles: { [key: string]: { bg: string; text: string; } } = {
 };
 
 const classifications = [
-  { type: 'residential', label: 'Residential', color: 'bg-blue-500' },
+  { type: 'residential', label: 'Residential', color: 'bg-emerald-500' },
   { type: 'commercial', label: 'Commercial', color: 'bg-amber-500' },
   { type: 'industrial', label: 'Industrial', color: 'bg-purple-500' },
-  { type: 'institutional', label: 'Institutional', color: 'bg-emerald-500' },
-  { type: 'mixed', label: 'Mixed-Use', color: 'bg-gray-500' },
+  { type: 'institutional', label: 'Institutional', color: 'bg-sky-500' },
 ];
 
 export function StatsPanel() {
-  const { activeFilters, filteredBuildings, allBuildings } = useStore();
+  const { activeFilters, filteredBuildings } = useStore();
   const [stats, setStats] = useState({
     totalBuildings: 0,
     totalArea: 0,
@@ -48,39 +47,27 @@ export function StatsPanel() {
       commercial: 0,
       industrial: 0,
       institutional: 0,
-      mixed: 0,
     }
   });
 
-  const buildingsToAnalyze = useMemo(() => {
-    // If filters are active, use filteredBuildings. Otherwise, use allBuildings.
-    const isAnyFilterActive = 
-      activeFilters.selectedTypes.length > 0 ||
-      activeFilters.sizeRange[0] > 0 ||
-      activeFilters.sizeRange[1] < 2000 ||
-      activeFilters.confidence > 0;
-
-    return isAnyFilterActive ? filteredBuildings : allBuildings;
-  }, [filteredBuildings, allBuildings, activeFilters]);
-
   useEffect(() => {
-    if (buildingsToAnalyze.length > 0) {
-      const totalArea = buildingsToAnalyze.reduce((sum, b) => sum + (b.properties.area_in_meters || 0), 0);
-      const totalConfidence = buildingsToAnalyze.reduce((sum, b) => sum + (b.properties.confidence || 0), 0);
-      const revenuePotential = buildingsToAnalyze.reduce((sum, b) => sum + (b.properties.estimatedValue || 0), 0);
+    if (filteredBuildings.length > 0) {
+      const totalArea = filteredBuildings.reduce((sum, b) => sum + (b.properties.area_in_meters || 0), 0);
+      const totalConfidence = filteredBuildings.reduce((sum, b) => sum + (b.properties.confidence || 0), 0);
+      const revenuePotential = totalArea * 1850; // Example calculation
       
-      const classificationCounts = buildingsToAnalyze.reduce((counts, b) => {
-        const type = b.properties.classification as keyof typeof stats.classificationCounts;
+      const classificationCounts = filteredBuildings.reduce((counts, b) => {
+        const type = b.properties.type as keyof typeof stats.classificationCounts;
         if (type in counts) {
           counts[type]++;
         }
         return counts;
-      }, { residential: 0, commercial: 0, industrial: 0, institutional: 0, mixed: 0 });
+      }, { residential: 0, commercial: 0, industrial: 0, institutional: 0 });
 
       setStats({
-        totalBuildings: buildingsToAnalyze.length,
+        totalBuildings: filteredBuildings.length,
         totalArea,
-        averageConfidence: buildingsToAnalyze.length > 0 ? totalConfidence / buildingsToAnalyze.length : 0,
+        averageConfidence: filteredBuildings.length > 0 ? totalConfidence / filteredBuildings.length : 0,
         revenuePotential,
         classificationCounts,
       });
@@ -95,18 +82,21 @@ export function StatsPanel() {
           commercial: 0,
           industrial: 0,
           institutional: 0,
-          mixed: 0,
         }
       });
     }
-  }, [buildingsToAnalyze]);
+  }, [filteredBuildings]);
 
 
   const handleExport = () => {
     const params = new URLSearchParams();
-    params.append('types', activeFilters.selectedTypes.join(','));
+    if (activeFilters.selectedTypes.length > 0) {
+      params.append('types', activeFilters.selectedTypes.join(','));
+    }
     params.append('minSize', String(activeFilters.sizeRange[0]));
-    params.append('maxSize', String(activeFilters.sizeRange[1]));
+    if (activeFilters.sizeRange[1] < 2000) {
+      params.append('maxSize', String(activeFilters.sizeRange[1]));
+    }
     params.append('confidence', String(activeFilters.confidence));
     window.open(`/api/export?${params.toString()}`, '_blank');
   };

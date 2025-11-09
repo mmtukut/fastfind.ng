@@ -11,13 +11,23 @@ import { Separator } from '../ui/separator';
 import { Logo } from './Logo';
 
 export function DashboardNavbar() {
-  const { isAdminView, toggleAdminView } = useStore();
+  const { isAdminView, toggleAdminView, activeFilters, filteredBuildings } = useStore();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const handleExport = () => {
-    // This function will be wired up to the store to get filters
-    window.open('/api/export', '_blank');
+    const params = new URLSearchParams();
+    if (activeFilters.selectedTypes.length > 0) {
+      params.append('types', activeFilters.selectedTypes.join(','));
+    }
+    params.append('minSize', String(activeFilters.sizeRange[0]));
+    if (activeFilters.sizeRange[1] < 2000) {
+      params.append('maxSize', String(activeFilters.sizeRange[1]));
+    }
+    params.append('confidence', String(activeFilters.confidence));
+    window.open(`/api/export?${params.toString()}`, '_blank');
   };
+
+  const revenuePotential = filteredBuildings.reduce((sum, b) => sum + (b.properties.area_in_meters || 0), 0) * 1850;
 
   return (
     <header className="bg-white/80 backdrop-blur-lg border-b border-gray-200 sticky top-0 z-50 shadow-sm">
@@ -60,12 +70,12 @@ export function DashboardNavbar() {
             <div className="hidden xl:flex items-center gap-4">
               <div>
                 <p className="text-xs text-gray-500">Buildings</p>
-                <p className="font-bold text-gray-800">49,997</p>
+                <p className="font-bold text-gray-800">{filteredBuildings.length.toLocaleString()}</p>
               </div>
               <Separator orientation="vertical" className="h-8" />
               <div>
                 <p className="text-xs text-gray-500">Revenue Potential</p>
-                <p className="font-bold text-gray-800">₦2.6B</p>
+                <p className="font-bold text-gray-800">₦{(revenuePotential / 1e9).toFixed(2)}B</p>
               </div>
             </div>
             

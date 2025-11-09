@@ -1,34 +1,68 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+const buildingTypes = ['residential', 'commercial', 'industrial', 'institutional'];
+
+function getRandomBuildingType(seed: number) {
+  const x = Math.sin(seed) * 10000;
+  const index = Math.floor((x - Math.floor(x)) * buildingTypes.length);
+  return buildingTypes[index];
+}
+
 async function getBuildingData(filters: any) {
-  const response = await fetch(process.env.NODE_ENV === 'production' 
-    ? 'http://localhost:9002/api/buildings' // Use the internal API route
-    : 'http://localhost:9002/api/buildings'
-  );
-  const geojsonData = await response.json();
+  // This function fetches ALL data and then filters.
+  // For very large datasets, filtering should be done at the source if possible.
+  const response = await fetch('https://firebasestorage.googleapis.com/v0/b/studio-8745024075-1f679.firebasestorage.app/o/gombe_buildings.csv?alt=media&token=b0db8a15-91a7-48db-952e-57b5b6bfe347');
+  const csvData = await response.text();
   
-  let features = geojsonData.features;
+  const lines = csvData.trim().split('\n');
+  const headers = lines[0].split(',').map(h => h.trim());
+  let allFeatures: any[] = [];
+
+  const headerMap = headers.reduce((acc, header, index) => {
+    acc[header] = index;
+    return acc;
+  }, {} as {[key: string]: number});
+
+  for (let i = 1; i < lines.length; i++) {
+    const data = lines[i].split(',').map(d => d.trim());
+    if (data.length !== headers.length) continue;
+
+    const properties: { [key: string]: any } = {};
+      headers.forEach((header, index) => {
+        const value = data[index];
+        const numValue = parseFloat(value);
+        if (!isNaN(numValue) && (header === 'area_in_meters' || header === 'confidence' || header === 'latitude' || header === 'longitude')) {
+          properties[header] = numValue;
+        } else {
+          properties[header] = value;
+        }
+      });
+      properties['type'] = getRandomBuildingType(properties['latitude'] + properties['longitude']);
+      allFeatures.push(properties);
+  }
+  
+  let features = allFeatures;
 
   if (filters.types) {
     const types = filters.types.split(',');
-    features = features.filter((feature: any) => types.includes(feature.properties.type));
+    features = features.filter((feature: any) => types.includes(feature.type));
   }
 
   if (filters.minSize || filters.maxSize) {
     const minSize = parseFloat(filters.minSize || '0');
     const maxSize = parseFloat(filters.maxSize || 'Infinity');
     features = features.filter((feature: any) => 
-        feature.properties.area_in_meters >= minSize && feature.properties.area_in_meters <= maxSize
+        feature.area_in_meters >= minSize && feature.area_in_meters <= maxSize
     );
   }
 
   if (filters.confidence) {
     // The confidence filter is 0-100, but the property confidence is 0-1
     const minConfidence = parseFloat(filters.confidence) / 100;
-    features = features.filter((feature: any) => feature.properties.confidence >= minConfidence);
+    features = features.filter((feature: any) => feature.confidence >= minConfidence);
   }
 
-  return features.map((feature: any) => feature.properties);
+  return features;
 }
 
 function convertToCSV(data: any[]) {
@@ -41,9 +75,9 @@ function convertToCSV(data: any[]) {
     ...data.map(row => 
       headers.map(header => {
         const value = row[header];
-        // Handle values that contain commas by wrapping them in quotes
         const stringValue = String(value === null || value === undefined ? '' : value);
-        return stringValue.includes(',') ? `"${stringValue}"` : stringValue;
+        // Wrap in quotes if value contains a comma
+        return stringValue.includes(',') ? `"${stringValue.replace(/"/g, '""')}"` : stringValue;
       }).join(',')
     )
   ];

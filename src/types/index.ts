@@ -1,21 +1,16 @@
-export type BuildingClassification = 'residential' | 'commercial' | 'industrial' | 'institutional' | 'mixed';
-
 export interface BuildingProperties {
     area_in_meters: number;
     confidence: number;
-    classification: BuildingClassification;
-    nearRoad: boolean;
-    estimatedValue: number;
-    detectedAt: string;
+    type: 'residential' | 'commercial' | 'industrial' | 'institutional' | 'mixed-use';
+    id: string;
+    latitude: number;
+    longitude: number;
     // Allow other properties from CSV
     [key: string]: any;
 }
 
 export interface Building {
-    id: string; // Using a unique string ID now
-    geometry: {
-        type: 'Polygon';
-        coordinates: number[][][]; // [[[lon, lat], [lon, lat], ...]]
-    };
+    id: string | number;
     properties: BuildingProperties;
+    geometry: GeoJSON.Point; // The data is now Point-based
 }

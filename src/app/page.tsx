@@ -9,12 +9,10 @@ export default function LandingPage() {
   return (
     <div className="dark bg-background text-foreground">
       <Navbar />
-      <main>
-        <Hero />
-        <Stats />
-        <Features />
-        <Cta />
-      </main>
+      <Hero />
+      <Stats />
+      <Features />
+      <Cta />
       <Footer />
     </div>
   );
