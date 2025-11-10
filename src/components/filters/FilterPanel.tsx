@@ -1,31 +1,33 @@
 'use client';
 
-import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Home, Store, Factory, School, Check, SlidersHorizontal, X } from 'lucide-react';
+import { Home, Store, Factory, School, Check, SlidersHorizontal, X, Building } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { useStore } from '@/store/buildingStore';
 import { Badge } from '../ui/badge';
 import { ScrollArea } from '../ui/scroll-area';
+import { Building as BuildingType, BuildingClassification } from '@/types';
+import { useMemo, useState } from 'react';
 
-const buildingTypes = [
-  { id: 'residential', icon: Home, label: 'Residential', color: 'emerald', count: 37245 },
-  { id: 'commercial', icon: Store, label: 'Commercial', color: 'amber', count: 8932 },
-  { id: 'industrial', icon: Factory, label: 'Industrial', color: 'purple', count: 2456 },
-  { id: 'institutional', icon: School, label: 'Institutional', color: 'sky', count: 1267 },
+const buildingTypes: { id: BuildingClassification, icon: React.ElementType, label: string, color: string }[] = [
+  { id: 'residential', icon: Home, label: 'Residential', color: 'blue' },
+  { id: 'commercial', icon: Store, label: 'Commercial', color: 'amber' },
+  { id: 'industrial', icon: Factory, label: 'Industrial', color: 'purple' },
+  { id: 'institutional', icon: School, label: 'Institutional', color: 'sky' },
+  { id: 'mixed', icon: Building, label: 'Mixed-Use', color: 'gray' },
 ];
 
 const typeStyles: { [key: string]: { border: string; bg: string; iconContainer: string; icon: string; text: string; } } = {
-  emerald: { border: 'border-emerald-300', bg: 'bg-emerald-50', iconContainer: 'bg-emerald-100', icon: 'text-emerald-600', text: 'text-emerald-800' },
+  blue: { border: 'border-blue-300', bg: 'bg-blue-50', iconContainer: 'bg-blue-100', icon: 'text-blue-600', text: 'text-blue-800' },
   amber: { border: 'border-amber-300', bg: 'bg-amber-50', iconContainer: 'bg-amber-100', icon: 'text-amber-600', text: 'text-amber-800' },
   purple: { border: 'border-purple-300', bg: 'bg-purple-50', iconContainer: 'bg-purple-100', icon: 'text-purple-600', text: 'text-purple-800' },
   sky: { border: 'border-sky-300', bg: 'bg-sky-50', iconContainer: 'bg-sky-100', icon: 'text-sky-600', text: 'text-sky-800' },
+  gray: { border: 'border-gray-300', bg: 'bg-gray-50', iconContainer: 'bg-gray-100', icon: 'text-gray-600', text: 'text-gray-800' },
 };
 
-export function FilterPanel() {
+export function FilterPanel({ buildings }: { buildings: BuildingType[] }) {
   const { 
     filters, 
     setSelectedTypes, 
@@ -38,17 +40,28 @@ export function FilterPanel() {
   
   const [isCollapsed, setIsCollapsed] = useState(false);
 
-  const handleTypeToggle = (id: string) => {
+  const handleTypeToggle = (id: BuildingClassification) => {
     const newTypes = filters.selectedTypes.includes(id) 
       ? filters.selectedTypes.filter(t => t !== id) 
       : [...filters.selectedTypes, id];
-    setSelectedTypes(newTypes);
+    setSelectedTypes(newTypes as BuildingClassification[]);
   };
 
-  const totalBuildings = buildingTypes.reduce((sum, t) => sum + t.count, 0);
-  const filteredCount = buildingTypes
-    .filter(t => activeFilters.selectedTypes.length > 0 ? activeFilters.selectedTypes.includes(t.id) : true)
-    .reduce((sum, t) => sum + t.count, 0);
+  const buildingCounts = useMemo(() => {
+    return buildingTypes.map(type => {
+      const count = buildings.filter(b => b.properties.classification === type.id).length;
+      return { ...type, count };
+    });
+  }, [buildings]);
+
+  const totalBuildings = buildings.length;
+  
+  const filteredCount = useMemo(() => {
+    if (!activeFilters.selectedTypes.length) return totalBuildings;
+    return buildingCounts
+      .filter(t => activeFilters.selectedTypes.includes(t.id))
+      .reduce((sum, t) => sum + t.count, 0);
+  }, [activeFilters.selectedTypes, buildingCounts, totalBuildings]);
 
   if (isCollapsed) {
     return (
@@ -80,7 +93,7 @@ export function FilterPanel() {
           <div className="space-y-4">
             <Label className="font-bold text-base text-gray-900">Building Type</Label>
             <div className="space-y-3">
-              {buildingTypes.map((type) => {
+              {buildingCounts.map((type) => {
                 const Icon = type.icon;
                 const isSelected = filters.selectedTypes.includes(type.id);
                 const styles = typeStyles[type.color];
@@ -120,14 +133,14 @@ export function FilterPanel() {
           </div>
           
           <div className="space-y-4">
-            <Label className="font-bold text-base text-gray-900">Building Size</Label>
+            <Label className="font-bold text-base text-gray-900">Building Size (m²)</Label>
             <div className="px-1">
               <div className="flex justify-between text-sm font-medium text-gray-700 mb-2">
-                <span>{filters.sizeRange[0]} m²</span>
-                <span>{filters.sizeRange[1] >= 2000 ? '2000+ m²' : `${filters.sizeRange[1]} m²`}</span>
+                <span>{filters.sizeRange[0]}</span>
+                <span>{filters.sizeRange[1] >= 5000 ? '5000+' : `${filters.sizeRange[1]}`}</span>
               </div>
               <Slider 
-                min={0} max={2000} step={10} 
+                min={0} max={5000} step={10} 
                 value={filters.sizeRange} 
                 onValueChange={(value) => setSizeRange(value as [number, number])}
               />
@@ -139,14 +152,14 @@ export function FilterPanel() {
             <div className="px-1">
               <div className="flex justify-between items-center text-sm font-medium text-gray-700 mb-2">
                 <span>Minimum: {filters.confidence}%</span>
-                <Badge variant={filters.confidence >= 80 ? 'default' : filters.confidence >= 60 ? 'secondary' : 'destructive'} 
+                <Badge variant={filters.confidence >= 90 ? 'default' : filters.confidence >= 70 ? 'secondary' : 'destructive'} 
                   className={
-                    filters.confidence >= 80 ? 'bg-emerald-500/20 text-emerald-700' : 
-                    filters.confidence >= 60 ? 'bg-amber-500/20 text-amber-700' : 
+                    filters.confidence >= 90 ? 'bg-emerald-500/20 text-emerald-700' : 
+                    filters.confidence >= 70 ? 'bg-amber-500/20 text-amber-700' : 
                     'bg-red-500/20 text-red-700'
                   }
                 >
-                  {filters.confidence >= 80 ? 'High' : filters.confidence >= 60 ? 'Medium' : 'Low'}
+                  {filters.confidence >= 90 ? 'High' : filters.confidence >= 70 ? 'Medium' : 'Low'}
                 </Badge>
               </div>
               <Slider 

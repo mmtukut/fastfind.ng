@@ -1,50 +1,59 @@
-import { Building } from '@/types';
+import { Building, BuildingClassification } from '@/types';
 import { create } from 'zustand';
-
-const allBuildingTypes = [
-  'residential',
-  'commercial',
-  'industrial',
-  'institutional',
-];
 
 interface BuildingState {
   // Global App State
   isAdminView: boolean;
   toggleAdminView: () => void;
   
+  // Raw and Processed Data
+  buildings: Building[];
+  isLoading: boolean;
+  error: string | null;
+  progress: number;
+  setBuildings: (buildings: Building[]) => void;
+  setIsLoading: (isLoading: boolean) => void;
+  setError: (error: string | null) => void;
+  setProgress: (progress: number) => void;
+
   // Map/Data Filters
   filters: {
-    selectedTypes: string[];
+    selectedTypes: BuildingClassification[];
     sizeRange: [number, number];
     confidence: number;
   };
 
   // Actions
-  setSelectedTypes: (types: string[]) => void;
+  setSelectedTypes: (types: BuildingClassification[]) => void;
   setSizeRange: (range: [number, number]) => void;
   setConfidence: (confidence: number) => void;
   resetFilters: () => void;
   applyFilters: () => void;
-
-  // Filtered data (this is the data currently visible on the map)
-  filteredBuildings: Building[]; 
-  setFilteredBuildings: (buildings: Building[]) => void;
 
   // Active filters that are applied to the map
   activeFilters: BuildingState['filters'];
 }
 
 const initialFilterState = {
-  selectedTypes: [],
-  sizeRange: [0, 2000] as [number, number],
+  selectedTypes: [] as BuildingClassification[],
+  sizeRange: [0, 5000] as [number, number],
   confidence: 70,
 };
 
-export const useStore = create<BuildingState>((set) => ({
+export const useStore = create<BuildingState>((set, get) => ({
   // App state
   isAdminView: false,
   toggleAdminView: () => set((state) => ({ isAdminView: !state.isAdminView })),
+
+  // Data state
+  buildings: [],
+  isLoading: true,
+  error: null,
+  progress: 0,
+  setBuildings: (buildings) => set({ buildings }),
+  setIsLoading: (isLoading) => set({ isLoading }),
+  setError: (error) => set({ error }),
+  setProgress: (progress) => set({ progress }),
 
   // Filter state
   filters: initialFilterState,
@@ -53,16 +62,12 @@ export const useStore = create<BuildingState>((set) => ({
   // Actions
   setSelectedTypes: (types) => set((state) => ({ filters: { ...state.filters, selectedTypes: types } })),
   setSizeRange: (range) => set((state) => ({ filters: { ...state.filters, sizeRange: range } })),
-  setConfidence: (confidence) => set((state) => ({ filters: { ...state.filters, confidence: confidence } })),
+  setConfidence: (confidence) => set((state) => ({ filters: { ...state.filters, confidence } })),
   
-  resetFilters: () => set((state) => ({
+  resetFilters: () => set({
     filters: initialFilterState,
     activeFilters: initialFilterState
-  })),
+  }),
 
   applyFilters: () => set(state => ({ activeFilters: state.filters })),
-  
-  // Filtered data
-  filteredBuildings: [],
-  setFilteredBuildings: (buildings) => set({ filteredBuildings: buildings }),
 }));

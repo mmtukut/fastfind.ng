@@ -20,23 +20,27 @@ import { Button } from '../ui/button';
 import { useEffect, useState } from 'react';
 import { formatCurrency } from '@/lib/utils';
 import { ScrollArea } from '../ui/scroll-area';
+import { Building, BuildingClassification } from '@/types';
+import { useFilters } from '@/hooks/useFilters';
 
 const metricStyles: { [key: string]: { bg: string; text: string; } } = {
   green: { bg: 'bg-primary/10', text: 'text-primary' },
-  emerald: { bg: 'bg-emerald-500/10', text: 'text-emerald-500' },
-  sky: { bg: 'bg-sky-500/10', text: 'text-sky-500' },
+  blue: { bg: 'bg-blue-500/10', text: 'text-blue-500' },
   amber: { bg: 'bg-amber-500/10', text: 'text-amber-500' },
+  sky: { bg: 'bg-sky-500/10', text: 'text-sky-500' },
 };
 
-const classifications = [
-  { type: 'residential', label: 'Residential', color: 'bg-emerald-500' },
+const classifications: { type: BuildingClassification, label: string, color: string }[] = [
+  { type: 'residential', label: 'Residential', color: 'bg-blue-500' },
   { type: 'commercial', label: 'Commercial', color: 'bg-amber-500' },
   { type: 'industrial', label: 'Industrial', color: 'bg-purple-500' },
   { type: 'institutional', label: 'Institutional', color: 'bg-sky-500' },
+  { type: 'mixed', label: 'Mixed-Use', color: 'bg-gray-500'},
 ];
 
-export function StatsPanel() {
-  const { activeFilters, filteredBuildings } = useStore();
+export function StatsPanel({ buildings }: { buildings: Building[] }) {
+  const { filteredBuildings } = useFilters(buildings);
+  const { activeFilters } = useStore();
   const [stats, setStats] = useState({
     totalBuildings: 0,
     totalArea: 0,
@@ -47,6 +51,7 @@ export function StatsPanel() {
       commercial: 0,
       industrial: 0,
       institutional: 0,
+      mixed: 0
     }
   });
 
@@ -54,15 +59,16 @@ export function StatsPanel() {
     if (filteredBuildings.length > 0) {
       const totalArea = filteredBuildings.reduce((sum, b) => sum + (b.properties.area_in_meters || 0), 0);
       const totalConfidence = filteredBuildings.reduce((sum, b) => sum + (b.properties.confidence || 0), 0);
-      const revenuePotential = totalArea * 1850; // Example calculation
       
       const classificationCounts = filteredBuildings.reduce((counts, b) => {
-        const type = b.properties.type as keyof typeof stats.classificationCounts;
+        const type = b.properties.classification;
         if (type in counts) {
           counts[type]++;
         }
         return counts;
-      }, { residential: 0, commercial: 0, industrial: 0, institutional: 0 });
+      }, { residential: 0, commercial: 0, industrial: 0, institutional: 0, mixed: 0 });
+
+      const revenuePotential = filteredBuildings.reduce((sum, b) => sum + (b.properties.estimatedValue || 0), 0);
 
       setStats({
         totalBuildings: filteredBuildings.length,
@@ -77,12 +83,7 @@ export function StatsPanel() {
         totalArea: 0,
         averageConfidence: 0,
         revenuePotential: 0,
-        classificationCounts: {
-          residential: 0,
-          commercial: 0,
-          industrial: 0,
-          institutional: 0,
-        }
+        classificationCounts: { residential: 0, commercial: 0, industrial: 0, institutional: 0, mixed: 0 }
       });
     }
   }, [filteredBuildings]);
@@ -94,7 +95,7 @@ export function StatsPanel() {
       params.append('types', activeFilters.selectedTypes.join(','));
     }
     params.append('minSize', String(activeFilters.sizeRange[0]));
-    if (activeFilters.sizeRange[1] < 2000) {
+    if (activeFilters.sizeRange[1] < 5000) {
       params.append('maxSize', String(activeFilters.sizeRange[1]));
     }
     params.append('confidence', String(activeFilters.confidence));
@@ -102,8 +103,8 @@ export function StatsPanel() {
   };
 
   const metrics = [
-    { label: 'Total Buildings', value: stats.totalBuildings.toLocaleString(), icon: Building2, trend: '', color: 'green' },
-    { label: 'Total Area', value: `${(stats.totalArea / 1e6).toFixed(2)} km²`, icon: MapPin, trend: '', color: 'emerald' },
+    { label: 'Total Buildings', value: stats.totalBuildings.toLocaleString(), icon: Building2, trend: '', color: 'blue' },
+    { label: 'Total Area', value: `${(stats.totalArea / 1e6).toFixed(2)} km²`, icon: MapPin, trend: '', color: 'green' },
     { label: 'Avg. Confidence', value: `${(stats.averageConfidence * 100).toFixed(1)}%`, icon: CheckCircle2, trend: 'High', color: 'sky' },
     { label: 'Revenue Potential', value: formatCurrency(stats.revenuePotential), icon: DollarSign, trend: '', color: 'amber' },
   ];
@@ -154,12 +155,15 @@ export function StatsPanel() {
               </CardHeader>
             <CardContent className="space-y-4">
               {classifications.map((cat, index) => {
-                const count = stats.classificationCounts[cat.type as keyof typeof stats.classificationCounts] || 0;
+                const count = stats.classificationCounts[cat.type] || 0;
                 const percent = stats.totalBuildings > 0 ? (count / stats.totalBuildings) * 100 : 0;
                 return (
                 <motion.div key={cat.type} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: index * 0.05 }}>
                   <div className="flex justify-between items-center text-sm mb-2">
-                    <span className="font-medium text-gray-700">{cat.label}</span>
+                    <div className="flex items-center gap-2">
+                       <div className={`w-2 h-2 rounded-full ${cat.color}`} />
+                       <span className="font-medium text-gray-700">{cat.label}</span>
+                    </div>
                     <div className="flex items-center gap-2">
                       <span className="text-gray-500">{count.toLocaleString()}</span>
                       <span className="text-xs font-semibold text-gray-400">{percent.toFixed(1)}%</span>
@@ -171,15 +175,15 @@ export function StatsPanel() {
             </CardContent>
           </Card>
 
-          <div className="bg-gradient-to-br from-green-600 to-emerald-700 rounded-xl p-5 text-white shadow-lg shadow-green-500/20">
+          <div className="bg-gradient-to-br from-blue-600 to-primary rounded-xl p-5 text-white shadow-lg shadow-blue-500/20">
             <div className="flex items-center gap-2 mb-3"><DollarSign className="w-5 h-5" /><h3 className="text-sm font-bold">Revenue Impact</h3></div>
             <p className="text-4xl font-bold mb-2">{formatCurrency(stats.revenuePotential)}</p>
-            <p className="text-sm text-green-100 mb-4">Estimated Annual Potential</p>
-            <Separator className="bg-green-300/30 my-3" />
+            <p className="text-sm text-blue-100 mb-4">Estimated Annual Potential</p>
+            <Separator className="bg-blue-300/30 my-3" />
             <div className="space-y-2">
-              <div className="flex justify-between text-sm"><span className="text-green-100">Identified Properties</span><span className="font-semibold">{stats.totalBuildings.toLocaleString()}</span></div>
-              <div className="flex justify-between text-sm"><span className="text-green-100">Taxable Area</span><span className="font-semibold">{(stats.totalArea / 1e6).toFixed(2)} km²</span></div>
-              <div className="flex justify-between text-sm"><span className="text-green-100">Potential Increase</span><span className="font-semibold text-emerald-300">+185%</span></div>
+              <div className="flex justify-between text-sm"><span className="text-blue-100">Identified Properties</span><span className="font-semibold">{stats.totalBuildings.toLocaleString()}</span></div>
+              <div className="flex justify-between text-sm"><span className="text-blue-100">Taxable Area</span><span className="font-semibold">{(stats.totalArea / 1e6).toFixed(2)} km²</span></div>
+              <div className="flex justify-between text-sm"><span className="text-blue-100">Potential Increase</span><span className="font-semibold text-sky-300">+185%</span></div>
             </div>
           </div>
           

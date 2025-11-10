@@ -9,10 +9,12 @@ import { useStore } from '@/store/buildingStore';
 import { Badge } from '../ui/badge';
 import { Separator } from '../ui/separator';
 import { Logo } from './Logo';
+import { useFilters } from '@/hooks/useFilters';
 
 export function DashboardNavbar() {
-  const { isAdminView, toggleAdminView, activeFilters, filteredBuildings } = useStore();
+  const { isAdminView, toggleAdminView, activeFilters, buildings } = useStore();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { filteredBuildings } = useFilters(buildings);
 
   const handleExport = () => {
     const params = new URLSearchParams();
@@ -20,14 +22,14 @@ export function DashboardNavbar() {
       params.append('types', activeFilters.selectedTypes.join(','));
     }
     params.append('minSize', String(activeFilters.sizeRange[0]));
-    if (activeFilters.sizeRange[1] < 2000) {
+    if (activeFilters.sizeRange[1] < 5000) {
       params.append('maxSize', String(activeFilters.sizeRange[1]));
     }
     params.append('confidence', String(activeFilters.confidence));
     window.open(`/api/export?${params.toString()}`, '_blank');
   };
 
-  const revenuePotential = filteredBuildings.reduce((sum, b) => sum + (b.properties.area_in_meters || 0), 0) * 1850;
+  const revenuePotential = filteredBuildings.reduce((sum, b) => sum + (b.properties.estimatedValue || 0), 0);
 
   return (
     <header className="bg-white/80 backdrop-blur-lg border-b border-gray-200 sticky top-0 z-50 shadow-sm">
