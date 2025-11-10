@@ -17,13 +17,13 @@ export function Logo({ className }: { className?: string }) {
             font-size: 24px;
           }
           .find-text {
-            fill: hsl(var(--accent));
+            fill: hsl(var(--primary));
             font-family: var(--font-space-grotesk), sans-serif;
             font-weight: 700;
             font-size: 24px;
           }
           .underline {
-            fill: hsl(var(--accent));
+            fill: hsl(var(--primary));
           }
         `}
       </style>
