@@ -1,5 +1,6 @@
 import { Logo } from '../layout/Logo';
 import Link from 'next/link';
+import Image from 'next/image';
 
 const navigation = {
   solutions: [
@@ -79,9 +80,24 @@ export function Footer() {
             </div>
           </div>
         </div>
-        <div className="mt-16 border-t border-border/50 pt-8 sm:mt-20 lg:mt-24">
-          <p className="text-xs leading-5 text-muted-foreground">&copy; {new Date().getFullYear()} FastFind360. All rights reserved.</p>
+
+        <div className="mt-16 border-t border-border/50 pt-8 flex flex-col sm:flex-row justify-between items-center gap-6">
+            <p className="text-xs leading-5 text-muted-foreground">&copy; {new Date().getFullYear()} FastFind360. All rights reserved.</p>
+
+            <div className="flex items-center gap-3">
+                <p className="text-xs text-muted-foreground">Supported By:</p>
+                <a href="https://nigcomsat.gov.ng/" target="_blank" rel="noopener noreferrer">
+                    <Image 
+                        src="https://firebasestorage.googleapis.com/v0/b/studio-8745024075-1f679.firebasestorage.app/o/nigcomsat.jpeg?alt=media&token=82b9081c-455f-412c-903f-fc53b13fb4bd"
+                        alt="NIGCOMSAT Logo"
+                        width={100}
+                        height={24}
+                        className="object-contain"
+                    />
+                </a>
+            </div>
         </div>
+
       </div>
     </footer>
   )
