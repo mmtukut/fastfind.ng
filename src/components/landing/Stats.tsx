@@ -38,7 +38,7 @@ export function Stats() {
                   alt="NIGCOMSAT Logo"
                   width={150}
                   height={36}
-                  className="object-contain"
+                  className="object-contain rounded-full"
                   data-ai-hint="logo company"
               />
             </a>

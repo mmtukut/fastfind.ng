@@ -38,11 +38,7 @@ export function DashboardNavbar() {
           
           <div className="flex items-center gap-6">
             <Link href="/" className="flex items-center gap-3">
-               <Logo className="w-10 h-10" />
-              <div className="hidden sm:block">
-                <p className="font-bold text-lg text-gray-800">FastFind360</p>
-                <p className="text-xs text-gray-500 -mt-1">Property Intelligence</p>
-              </div>
+               <Logo className="w-auto h-10" />
             </Link>
             
             <div className="hidden md:flex items-center bg-gray-100 rounded-lg p-1">

@@ -32,8 +32,7 @@ export function Footer() {
         <div className="xl:grid xl:grid-cols-3 xl:gap-8">
           <div className="space-y-8">
             <Link href="/" className="flex items-center space-x-2">
-                <Logo className="h-8 w-8 text-primary" />
-                <span className="font-bold font-headline text-2xl">FastFind360</span>
+                <Logo className="h-10 w-auto" />
             </Link>
             <p className="text-sm leading-6 text-muted-foreground">
               Building the foundational infrastructure for property intelligence in Africa.
