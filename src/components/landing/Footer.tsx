@@ -85,14 +85,14 @@ export function Footer() {
             <p className="text-xs leading-5 text-muted-foreground">&copy; {new Date().getFullYear()} FastFind360. All rights reserved.</p>
 
             <div className="flex items-center gap-3">
-                <p className="text-xs text-muted-foreground">Supported By:</p>
+                <p className="text-xs text-muted-foreground">Proudly accelerated by</p>
                 <a href="https://nigcomsat.gov.ng/" target="_blank" rel="noopener noreferrer">
                     <Image 
                         src="https://firebasestorage.googleapis.com/v0/b/studio-8745024075-1f679.firebasestorage.app/o/nigcomsat.jpeg?alt=media&token=82b9081c-455f-412c-903f-fc53b13fb4bd"
                         alt="NIGCOMSAT Logo"
-                        width={100}
-                        height={24}
-                        className="object-contain"
+                        width={32}
+                        height={32}
+                        className="object-cover rounded-full"
                     />
                 </a>
             </div>

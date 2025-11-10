@@ -30,8 +30,8 @@ export function Stats() {
             ))}
           </div>
 
-          <div className="mt-20 text-center flex justify-center items-center gap-4">
-            <p className="font-semibold text-muted-foreground">With support from</p>
+          <div className="mt-20 text-center flex flex-col items-center justify-center gap-4">
+            <p className="text-sm text-muted-foreground">A proud graduate of the NIGCOMSAT Accelerator Program.</p>
             <a href="https://nigcomsat.gov.ng/" target="_blank" rel="noopener noreferrer">
               <Image 
                   src="https://firebasestorage.googleapis.com/v0/b/studio-8745024075-1f679.firebasestorage.app/o/nigcomsat.jpeg?alt=media&token=82b9081c-455f-412c-903f-fc53b13fb4bd"
