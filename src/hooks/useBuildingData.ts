@@ -5,8 +5,6 @@ import { parseGombeBuildingsCSV } from '@/utils/csvParser';
 import { Building } from '@/types';
 import { useStore } from '@/store/buildingStore';
 
-const CSV_URL = 'https://firebasestorage.googleapis.com/v0/b/studio-8745024075-1f679.firebasestorage.app/o/gombe_buildings.csv?alt=media&token=b0db8a15-91a7-48db-952e-57b5b6bfe347';
-
 export function useBuildingData() {
   const { buildings, setBuildings, isLoading, setIsLoading, error, setError, progress, setProgress } = useStore(state => ({
     buildings: state.buildings,
@@ -20,7 +18,6 @@ export function useBuildingData() {
   }));
 
   useEffect(() => {
-    // Only fetch if data is not already loaded
     if (buildings.length > 0) {
       setIsLoading(false);
       return;
@@ -32,18 +29,19 @@ export function useBuildingData() {
       setProgress(0);
 
       try {
-        const response = await fetch(CSV_URL);
+        // Fetch from the new server-side API route
+        const response = await fetch('/api/buildings');
         if (!response.ok) {
-          throw new Error(`Failed to fetch CSV: ${response.statusText}`);
+          const errorText = await response.text();
+          throw new Error(errorText || `Failed to fetch building data: ${response.statusText}`);
         }
         const csvText = await response.text();
         
-        // Use a timeout to allow UI to update before heavy parsing
         setTimeout(() => {
-            parseGombeBuildingsCSV(csvText, (parsedBuildings, progress) => {
+            parseGombeBuildingsCSV(csvText, (parsedBuildings, currentProgress) => {
                 setBuildings(parsedBuildings);
-                setProgress(progress);
-                if (progress === 100) {
+                setProgress(currentProgress);
+                if (currentProgress === 100) {
                     setIsLoading(false);
                 }
             });
