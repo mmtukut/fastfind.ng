@@ -10,6 +10,7 @@ import { Badge } from '../ui/badge';
 import { ScrollArea } from '../ui/scroll-area';
 import { Building as BuildingType, BuildingClassification } from '@/types';
 import { useMemo, useState } from 'react';
+import { CardTitle } from '../ui/card';
 
 const buildingTypes: { id: BuildingClassification, icon: React.ElementType, label: string, color: string }[] = [
   { id: 'residential', icon: Home, label: 'Residential', color: 'blue' },
