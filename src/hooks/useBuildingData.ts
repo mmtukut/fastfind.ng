@@ -8,20 +8,21 @@ import { useStore } from '@/store/buildingStore';
 const CSV_URL = 'https://firebasestorage.googleapis.com/v0/b/studio-8745024075-1f679.firebasestorage.app/o/gombe_buildings.csv?alt=media&token=b0db8a15-91a7-48db-952e-57b5b6bfe347';
 
 export function useBuildingData() {
-  const { buildings, setBuildings, setIsLoading, setError, setProgress, isLoading, error, progress } = useStore(state => ({
+  const { buildings, setBuildings, isLoading, setIsLoading, error, setError, progress, setProgress } = useStore(state => ({
     buildings: state.buildings,
     setBuildings: state.setBuildings,
-    setIsLoading: state.setIsLoading,
-    setError: state.setError,
-    setProgress: state.setProgress,
     isLoading: state.isLoading,
+    setIsLoading: state.setIsLoading,
     error: state.error,
+    setError: state.setError,
     progress: state.progress,
+    setProgress: state.setProgress,
   }));
 
   useEffect(() => {
     // Only fetch if data is not already loaded
-    if (buildings.length > 0 || isLoading) {
+    if (buildings.length > 0) {
+      setIsLoading(false);
       return;
     }
 
@@ -56,7 +57,7 @@ export function useBuildingData() {
     }
 
     fetchData();
-  }, []); // Run only once on mount
+  }, [setBuildings, setError, setIsLoading, setProgress, buildings.length]);
 
   return { buildings, isLoading, error, progress };
 }
