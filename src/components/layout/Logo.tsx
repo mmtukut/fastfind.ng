@@ -28,8 +28,8 @@ export function Logo({ className }: { className?: string }) {
         `}
       </style>
       <text x="0" y="24" className="fast-text">Fast</text>
-      <text x="58" y="24" className="find-text">Find360</text>
-      <rect x="0" y="34" width="195" height="3" className="underline" rx="1.5" />
+      <text x="51" y="24" className="find-text">Find360</text>
+      <rect x="0" y="34" width="153" height="3" className="underline" rx="1.5" />
     </svg>
   );
 }

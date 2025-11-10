@@ -91,7 +91,7 @@ export function Footer() {
                         alt="NIGCOMSAT Logo"
                         width={32}
                         height={32}
-                        className="object-cover rounded-full"
+                        className="object-contain rounded-full"
                     />
                 </a>
             </div>
