@@ -1,6 +1,6 @@
 import Papa from 'papaparse';
-import { Building } from '@/types';
-import { classifyBuilding, estimateValue } from './buildingClassifier';
+import { Building, BuildingClassification } from '@/types';
+import { estimateValue } from './buildingClassifier';
 
 function parseWKTPolygon(wkt: string): number[][][] | null {
   if (!wkt || typeof wkt !== 'string') return null;
@@ -45,20 +45,94 @@ function parseWKTPolygon(wkt: string): number[][][] | null {
   }
 }
 
+// Type for the raw row data before classification
+type UnclassifiedBuildingRow = {
+  id: string;
+  area: number;
+  confidence: number;
+  wkt: string;
+}
+
+const BATCH_SIZE = 500; // Number of buildings to send for classification at once
+
 export function parseGombeBuildingsCSV(
   csvText: string,
   onUpdate: (buildings: Building[], progress: number) => void
 ) {
-  const buildings: Building[] = [];
+  let buildings: Building[] = [];
   let rowCount = 0;
-  // Estimate total rows for progress calculation (adjust if needed)
   const totalRows = csvText.split('\n').length;
-  const updateInterval = Math.max(1000, Math.floor(totalRows / 100));
+  let unclassifiedBatch: UnclassifiedBuildingRow[] = [];
+
+  const classifyAndAddBatch = async () => {
+    if (unclassifiedBatch.length === 0) return;
+
+    // Create instances for the Vertex AI model
+    const instances = unclassifiedBatch.map(row => ({
+      // Your model expects features. Adapt this structure to match your model's input.
+      // For example, if it's a simple model based on area:
+      "area_in_meters": row.area,
+      "confidence": row.confidence,
+    }));
+
+    try {
+      const response = await fetch('/api/classify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ instances }),
+      });
+
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.details || 'Batch classification failed');
+      }
+
+      const { predictions } = await response.json();
+
+      if (!predictions || predictions.length !== unclassifiedBatch.length) {
+         throw new Error('Mismatched number of predictions received from model.');
+      }
+      
+      const classifiedBuildings = unclassifiedBatch.map((row, index) => {
+        const coordinates = parseWKTPolygon(row.wkt);
+        // The model prediction might be a simple string or a more complex object.
+        // Adapt this based on your model's exact output format.
+        const classification = (predictions[index] || 'unknown') as BuildingClassification;
+        
+        if (coordinates) {
+          const estimatedValue = estimateValue(classification, row.area);
+          return {
+            id: row.id,
+            geometry: { type: 'Polygon', coordinates },
+            properties: {
+              area_in_meters: row.area,
+              confidence: row.confidence,
+              classification: classification,
+              nearRoad: false,
+              estimatedValue,
+              detectedAt: new Date().toLocaleDateString(),
+            },
+          } as Building;
+        }
+        return null;
+      }).filter((b): b is Building => b !== null);
+
+      buildings = buildings.concat(classifiedBuildings);
+      
+    } catch (error) {
+      console.error("Error during batch classification:", error);
+      // Handle error, maybe retry or skip batch
+    } finally {
+      // Clear batch for next set of rows
+      unclassifiedBatch = [];
+    }
+  };
+
 
   Papa.parse(csvText, {
     header: true,
-    worker: true, // Use a web worker for performance
-    step: (results) => {
+    worker: true,
+    step: async (results) => {
       const row = results.data as any;
       rowCount++;
       
@@ -66,38 +140,27 @@ export function parseGombeBuildingsCSV(
       const confidence = parseFloat(row.confidence);
       const wkt = row.geometry;
 
-      if (!isNaN(area) && !isNaN(confidence) && wkt && row.full_plus_code) {
-        const coordinates = parseWKTPolygon(wkt);
-
-        if (coordinates) {
-          const classification = classifyBuilding(area);
-          const estimatedValue = estimateValue(classification, area);
-
-          buildings.push({
-            id: row.full_plus_code,
-            geometry: {
-              type: 'Polygon',
-              coordinates,
-            },
-            properties: {
-              area_in_meters: area,
-              confidence,
-              classification,
-              nearRoad: false, // Placeholder, as this info is not in the CSV
-              estimatedValue,
-              detectedAt: new Date().toLocaleDateString(), // Placeholder
-            },
-          });
-        }
+      if (!isNaN(area) && wkt && row.full_plus_code) {
+        unclassifiedBatch.push({
+          id: row.full_plus_code,
+          area: area,
+          confidence: confidence,
+          wkt: wkt
+        });
       }
       
-      // Provide progress updates without overwhelming the main thread
-      if (rowCount % updateInterval === 0 || rowCount === totalRows - 1) {
+      // When batch is full, send for classification
+      if (unclassifiedBatch.length >= BATCH_SIZE) {
+        await classifyAndAddBatch();
         const progress = Math.min(99, Math.round((rowCount / totalRows) * 100));
         onUpdate([...buildings], progress);
       }
     },
-    complete: () => {
+    complete: async () => {
+      // Process any remaining items in the last batch
+      if (unclassifiedBatch.length > 0) {
+        await classifyAndAddBatch();
+      }
       console.log(`Parsing complete. Found ${buildings.length} valid buildings.`);
       onUpdate([...buildings], 100);
     },

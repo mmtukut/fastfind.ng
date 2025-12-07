@@ -1,14 +1,6 @@
 import { BuildingClassification } from "@/types";
 
-// Simplified classification as we don't have road or shape data
-export function classifyBuilding(area: number): BuildingClassification {
-    if (area < 300) return 'residential';
-    if (area >= 200 && area <= 1000) return 'commercial';
-    if (area > 1000) return 'industrial';
-    if (area > 500) return 'institutional';
-    return 'mixed';
-}
-
+// This function is now used to calculate value based on the model's classification
 export function estimateValue(classification: BuildingClassification, area: number): number {
     switch (classification) {
         case 'residential': return area * 500;

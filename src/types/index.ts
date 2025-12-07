@@ -1,10 +1,10 @@
-export type BuildingClassification = 'residential' | 'commercial' | 'industrial' | 'institutional' | 'mixed';
+export type BuildingClassification = 'residential' | 'commercial' | 'industrial' | 'institutional' | 'mixed' | 'unknown';
 
 export interface BuildingProperties {
   // From CSV
   area_in_meters: number;
   confidence: number;
-  // Generated
+  // Generated / From Model
   classification: BuildingClassification;
   nearRoad: boolean; // This might be hard to calculate without more data
   estimatedValue: number;
