@@ -2,17 +2,20 @@ export type BuildingClassification = 'residential' | 'commercial' | 'industrial'
 
 export interface BuildingProperties {
   // From CSV
+  id: string; // Add id to properties for easier access
   area_in_meters: number;
   confidence: number;
   // Generated / From Model
   classification: BuildingClassification;
-  nearRoad: boolean; // This might be hard to calculate without more data
+  nearRoad: boolean; 
   estimatedValue: number;
   detectedAt: string;
 }
 
+// This now represents a GeoJSON Feature
 export interface Building {
-  id: string; // Using full_plus_code as a unique ID
+  id: string;
+  type: 'Feature';
   geometry: {
     type: 'Polygon';
     coordinates: number[][][]; // [[[lon, lat], [lon, lat], ...]]
