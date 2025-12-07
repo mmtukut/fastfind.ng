@@ -5,8 +5,7 @@ const CSV_URL = 'https://firebasestorage.googleapis.com/v0/b/studio-8745024075-1
 export async function GET(req: NextRequest) {
   try {
     const response = await fetch(CSV_URL, { 
-      // Using cache: 'force-cache' as the file is static. Can be changed if data updates frequently.
-      cache: 'force-cache' 
+      cache: 'no-store' 
     });
     
     if (!response.ok) {
