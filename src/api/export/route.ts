@@ -1,65 +1,40 @@
 import { NextRequest, NextResponse } from 'next/server';
+import Papa from 'papaparse';
 
-const buildingTypes = ['residential', 'commercial', 'industrial', 'institutional'];
+const API_URL = process.env.NODE_ENV === 'development'
+  ? 'http://localhost:9002/api/buildings'
+  : 'https://fastfind360.vercel.app/api/buildings';
 
-function getRandomBuildingType(seed: number) {
-  const x = Math.sin(seed) * 10000;
-  const index = Math.floor((x - Math.floor(x)) * buildingTypes.length);
-  return buildingTypes[index];
-}
 
 async function getBuildingData(filters: any) {
-  // This function fetches ALL data and then filters.
-  // For very large datasets, filtering should be done at the source if possible.
-  const response = await fetch('https://firebasestorage.googleapis.com/v0/b/studio-8745024075-1f679.firebasestorage.app/o/gombe_buildings.csv?alt=media&token=b0db8a15-91a7-48db-952e-57b5b6bfe347');
+  // This function fetches ALL data from the API route and then filters.
+  // For very large datasets, this could be optimized by moving filtering to the API source if possible.
+  const response = await fetch(API_URL);
   const csvData = await response.text();
   
-  const lines = csvData.trim().split('\n');
-  const headers = lines[0].split(',').map(h => h.trim());
-  let allFeatures: any[] = [];
+  const parseResult = Papa.parse(csvData, { header: true, skipEmptyLines: true });
+  let allFeatures = parseResult.data as any[];
 
-  const headerMap = headers.reduce((acc, header, index) => {
-    acc[header] = index;
-    return acc;
-  }, {} as {[key: string]: number});
-
-  for (let i = 1; i < lines.length; i++) {
-    const data = lines[i].split(',').map(d => d.trim());
-    if (data.length !== headers.length) continue;
-
-    const properties: { [key: string]: any } = {};
-      headers.forEach((header, index) => {
-        const value = data[index];
-        const numValue = parseFloat(value);
-        if (!isNaN(numValue) && (header === 'area_in_meters' || header === 'confidence' || header === 'latitude' || header === 'longitude')) {
-          properties[header] = numValue;
-        } else {
-          properties[header] = value;
-        }
-      });
-      properties['type'] = getRandomBuildingType(properties['latitude'] + properties['longitude']);
-      allFeatures.push(properties);
-  }
-  
   let features = allFeatures;
 
   if (filters.types) {
     const types = filters.types.split(',');
-    features = features.filter((feature: any) => types.includes(feature.type));
+    features = features.filter((feature: any) => types.includes(feature.classification));
   }
 
   if (filters.minSize || filters.maxSize) {
     const minSize = parseFloat(filters.minSize || '0');
     const maxSize = parseFloat(filters.maxSize || 'Infinity');
-    features = features.filter((feature: any) => 
-        feature.area_in_meters >= minSize && feature.area_in_meters <= maxSize
-    );
+    features = features.filter((feature: any) => {
+        const area = parseFloat(feature.area_in_meters);
+        return area >= minSize && area <= maxSize;
+    });
   }
 
   if (filters.confidence) {
     // The confidence filter is 0-100, but the property confidence is 0-1
     const minConfidence = parseFloat(filters.confidence) / 100;
-    features = features.filter((feature: any) => feature.confidence >= minConfidence);
+    features = features.filter((feature: any) => parseFloat(feature.confidence) >= minConfidence);
   }
 
   return features;
@@ -67,7 +42,12 @@ async function getBuildingData(filters: any) {
 
 function convertToCSV(data: any[]) {
   if (data.length === 0) {
-    return '';
+    // Return headers even if there is no data
+    const defaultHeaders = [
+        "area_in_meters", "confidence", "full_plus_code", "geometry", 
+        "classification", "nearRoad", "estimatedValue", "detectedAt"
+    ];
+     return defaultHeaders.join(',');
   }
   const headers = Object.keys(data[0]);
   const csvRows = [
