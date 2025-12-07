@@ -16,8 +16,11 @@ async function getBuildingData() {
   }
   
   console.log("Fetching fresh building data...");
-  const response = await fetch(CSV_URL, { 
-    // Use a revalidation strategy instead of 'no-store' for better performance
+  // Add a cache-busting parameter to ensure a fresh fetch from the source
+  const fetchUrl = `${CSV_URL}&_vercel_no_cache=${now}`;
+  
+  const response = await fetch(fetchUrl, { 
+    // Use a revalidation strategy instead of 'no-store' for better performance with our manual cache
     next: { revalidate: 3600 } 
   });
   
