@@ -44,8 +44,16 @@ export function useBuildingData() {
         setProgress(50); // Data fetched
 
         if (!response.ok) {
-          const errorJson = await response.json();
-          throw new Error(errorJson.error || `HTTP error! status: ${response.status}`);
+          const errorText = await response.text();
+          let errorMessage = errorText;
+          try {
+            // Try to parse as JSON, as some errors might be structured.
+            const errorJson = JSON.parse(errorText);
+            errorMessage = errorJson.error || errorText;
+          } catch (e) {
+            // If it's not JSON, the raw text is the error.
+          }
+          throw new Error(errorMessage || `HTTP error! status: ${response.status}`);
         }
 
         const geojsonData = await response.json();
